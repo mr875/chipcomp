@@ -1,3 +1,5 @@
+import re 
+import os
 import csv
 
 class ZeroLimit(Exception):
@@ -41,6 +43,13 @@ class ChipReader:
         ind = self.header.index(title)
         return ind
 
+    def getrs(self,val):
+        mo = re.search("rs[0-9]{4,}", val)         
+        if mo:
+            return mo.group()
+        else:
+            return None
+
     def makeit(self):
         with open(self.fname) as f:
             reader = csv.reader(f, delimiter=self.delim, quotechar=self.quotechar)
@@ -48,10 +57,30 @@ class ChipReader:
             for line in reader:
                 yield line
 
+    def fillcust(self,custom_titles):
+        try:
+            cust_dict = {i:self.colnum(i) for i in custom_titles}
+        except ValueError :
+            print ("problem finding hard coded custom columns for %s:%s\ncould you be using the wrong child class (%s) for file %s?" % (self.datasource,custom_titles,self.__class__,self.datasource))
+            raise
+        return cust_dict
+
 class InfCorEx24v1a1(ChipReader):
 
     def __init__(self,fname):
         super().__init__(fname)
-
-    def load_cols():
+        self.datasource=os.path.basename(fname)
+        self.load_cols()
+        self.load_custom()
+        self.GRCh37='37'
+        
+    def load_cols(self):
         self.col_unique_id = self.colnum('SNP_Name') 
+        self.col_chr = self.colnum('Chr')
+        self.col_GRCh37_pos = self.colnum('Coord')
+
+    def load_custom(self):
+        flankseqcols=["Forward_Seq","Design_Seq","Top_Seq","Plus_Seq"]
+        self.mcols_flank_seq = self.fillcust(flankseqcols)
+
+
