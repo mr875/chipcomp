@@ -1,3 +1,4 @@
+import itertools
 import re 
 import os
 import csv
@@ -53,17 +54,42 @@ class ChipReader:
     def makeit(self):
         with open(self.fname) as f:
             reader = csv.reader(f, delimiter=self.delim, quotechar=self.quotechar)
-#            return reader
             for line in reader:
                 yield line
 
     def fillcust(self,custom_titles):
         try:
-            cust_dict = {i:self.colnum(i) for i in custom_titles}
+            ordrdlst = [self.colnum(i) for i in custom_titles]
         except ValueError :
             print ("problem finding hard coded custom columns for %s:%s\ncould you be using the wrong child class (%s) for file %s?" % (self.datasource,custom_titles,self.__class__,self.datasource))
             raise
-        return cust_dict
+        return ordrdlst
+
+    def comblist(self,tot):#creates a list of combinations of indexes to do sequence comparison without loosing the orginal order of the columns as they appear in the source file
+        comblist = []
+        for a, b in itertools.combinations(range(tot), 2):
+            comblist.append([a,b])
+        return comblist
+
+    def checkflank(self,seq):
+        seqsplit = []
+        a = seq.split('[')
+        if len(a) == 2:
+            seqsplit.append(a[0])
+        else:
+            return None
+        b = seq.split(']')
+        if len(b) == 2:
+            seqsplit.append(b[1])
+        else:
+            return None
+        return seqsplit
+        
+    def flankcomp(self,seq1,seq2):
+        seq1split = self.checkflank(seq1)
+        seq2split = self.checkflank(seq2)
+        print(seq1split)
+
 
 class InfCorEx24v1a1(ChipReader):
 
@@ -80,7 +106,12 @@ class InfCorEx24v1a1(ChipReader):
         self.col_GRCh37_pos = self.colnum('Coord')
 
     def load_custom(self):
-        flankseqcols=["Forward_Seq","Design_Seq","Top_Seq","Plus_Seq"]
-        self.mcols_flank_seq = self.fillcust(flankseqcols)
+        self.flankseqcols=["Forward_Seq","Design_Seq","Top_Seq","Plus_Seq"]
+        self.flankseqcoln = self.fillcust(self.flankseqcols)
 
-
+    def proc_line(self,line): #todo: add a bit to remove blanks
+        seqs = [line[coln] for coln in self.flankseqcoln]
+        comblist = self.comblist(len(seqs))
+        print(comblist)
+        for ind,comb in enumerate(comblist):
+            match = self.flankcomp(seqs[comb[0]],seqs[comb[1]])
