@@ -98,6 +98,35 @@ class ChipReader:
             return seq1valid,seq2valid #leave early
         return seq1valid,seq2valid
 
+    def choose_flankseq(self,line_arr,seq_inds):
+        seqs = [line_arr[coln] for coln in seq_inds]
+        comblist = self.comblist(len(seqs))
+        #print(comblist)  # all comparisons
+        skip = set()  
+        combindxinclude = []
+        for ind,comb in enumerate(comblist): 
+            if set(comb) & skip:
+                continue
+            seq1valid, seq2valid = self.flankcomp(seqs[comb[0]],seqs[comb[1]])
+            combinclude = False 
+            if not seq1valid:
+                skip.add(comb[0])
+            else:
+                combinclude = True 
+            if not seq2valid:
+                skip.add(comb[1])	
+            else:
+                combinclude = True
+            if combinclude:
+                combindxinclude.append(ind)	
+        #print(skip,combindxinclude) #what seqs to skip and what combos to include
+        seqnum = set()
+        for combind in combindxinclude:
+            seqnum.add(comblist[combind][0])
+            seqnum.add(comblist[combind][1])
+        seqnum = seqnum - skip
+        #print(seqnum)  # unique and non faulty seqs to include (their indexes in self.flankseqcoln)
+        return list(seqnum)
 
 class InfCorEx24v1a1(ChipReader):
 
@@ -117,37 +146,8 @@ class InfCorEx24v1a1(ChipReader):
         self.flankseqcols=["Forward_Seq","Design_Seq","Top_Seq","Plus_Seq"]
         self.flankseqcoln = self.fillcust(self.flankseqcols)
 
-    def proc_line(self):
-        seq_inds = self.flankseqcoln
-
-    def choose_flankseq(self,line_arr,seq_inds):
-        seqs = [line_arr[coln] for coln in self.flankseqcoln]
-        comblist = self.comblist(len(seqs))
-        print(comblist)  # all comparisons
-        skip = set()  
-        combindxinclude = []
-        for ind,comb in enumerate(comblist): 
-            if set(comb) & skip:
-                continue
-            seq1valid, seq2valid = self.flankcomp(seqs[comb[0]],seqs[comb[1]])
-            combinclude = False 
-            if not seq1valid:
-                skip.add(comb[0])
-            else:
-                combinclude = True 
-            if not seq2valid:
-                skip.add(comb[1])	
-            else:
-                combinclude = True
-            if combinclude:
-                combindxinclude.append(ind)	
-        print(skip,combindxinclude) #what seqs to skip and what combos to include
-        seqnum = set()
-        for combind in combindxinclude:
-            seqnum.add(comblist[combind][0])
-            seqnum.add(comblist[combind][1])
-        seqnum = seqnum - skip
-        if seqnum == set():
-            print("no sequences found")
-        print(seqnum)  # unique and non faulty seqs to include (their indexes in self.flankseqcoln)
-        return list(seqnum)
+    def proc_line(self,line_arr):
+        seqs_to_use = self.choose_flankseq(line_arr,self.flankseqcoln)
+        print(seqs_to_use)
+        #todo: convert seqs_to_use back into line_arr coordinates
+        #todo: remove sequence repeats from the selection
