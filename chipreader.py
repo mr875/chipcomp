@@ -84,11 +84,19 @@ class ChipReader:
         else:
             return None
         return seqsplit
-        
+
     def flankcomp(self,seq1,seq2):
         seq1split = self.checkflank(seq1)
         seq2split = self.checkflank(seq2)
-        print(seq1split)
+        seq1valid = False
+        seq2valid = False
+        if seq1split:
+            seq1valid = True
+        if seq2split:
+            seq2valid = True
+        if not seq1valid or not seq2valid:
+            return seq1valid,seq2valid #leave early
+        return seq1valid,seq2valid
 
 
 class InfCorEx24v1a1(ChipReader):
@@ -99,7 +107,7 @@ class InfCorEx24v1a1(ChipReader):
         self.load_cols()
         self.load_custom()
         self.GRCh37='37'
-        
+
     def load_cols(self):
         self.col_unique_id = self.colnum('SNP_Name') 
         self.col_chr = self.colnum('Chr')
@@ -109,9 +117,37 @@ class InfCorEx24v1a1(ChipReader):
         self.flankseqcols=["Forward_Seq","Design_Seq","Top_Seq","Plus_Seq"]
         self.flankseqcoln = self.fillcust(self.flankseqcols)
 
-    def proc_line(self,line): #todo: add a bit to remove blanks
-        seqs = [line[coln] for coln in self.flankseqcoln]
+    def proc_line(self):
+        seq_inds = self.flankseqcoln
+
+    def choose_flankseq(self,line_arr,seq_inds):
+        seqs = [line_arr[coln] for coln in self.flankseqcoln]
         comblist = self.comblist(len(seqs))
-        print(comblist)
-        for ind,comb in enumerate(comblist):
-            match = self.flankcomp(seqs[comb[0]],seqs[comb[1]])
+        print(comblist)  # all comparisons
+        skip = set()  
+        combindxinclude = []
+        for ind,comb in enumerate(comblist): 
+            if set(comb) & skip:
+                continue
+            seq1valid, seq2valid = self.flankcomp(seqs[comb[0]],seqs[comb[1]])
+            combinclude = False 
+            if not seq1valid:
+                skip.add(comb[0])
+            else:
+                combinclude = True 
+            if not seq2valid:
+                skip.add(comb[1])	
+            else:
+                combinclude = True
+            if combinclude:
+                combindxinclude.append(ind)	
+        print(skip,combindxinclude) #what seqs to skip and what combos to include
+        seqnum = set()
+        for combind in combindxinclude:
+            seqnum.add(comblist[combind][0])
+            seqnum.add(comblist[combind][1])
+        seqnum = seqnum - skip
+        if seqnum == set():
+            print("no sequences found")
+        print(seqnum)  # unique and non faulty seqs to include (their indexes in self.flankseqcoln)
+        return list(seqnum)
