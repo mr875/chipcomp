@@ -161,6 +161,11 @@ class InfCorEx24v1a1(ChipReader):
     def proc_line(self,line_arr):
         seqs_to_use = self.choose_flankseq(line_arr,self.flankseqcoln)
         cols_used = [self.flankseqcols[i] for i in seqs_to_use]
-        print(cols_used)
         coln_used = [self.flankseqcoln[i] for i in seqs_to_use]
+        seqs = [line_arr[i] for i in coln_used]
         snp_id = self.getrs(line_arr[self.col_unique_id])
+        print(seqs_to_use)
+        print(cols_used)
+        print(coln_used)
+        print(seqs)
+        print("--------")
