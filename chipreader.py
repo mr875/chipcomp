@@ -22,6 +22,10 @@ class ChipReader:
         self.col_GRCh38_pos = None
         self.col_flank_seq = None
         self.col_flank_strand = None
+        self.flankseqcols = None # col titles of flank seqs when there are multiple
+        self.flankseqcoln = None # col number ^ fillcust(self.flankseqcols)
+        self.flankseqcols_strand = None # col titles of flank strand, corresponding to flankseqcols 
+        self.flankseqcoln_strand = None # col number of flank strand, filled with ^
         self.col_probe_seq = None
         self.col_probe_strand = None
 
@@ -158,14 +162,20 @@ class InfCorEx24v1a1(ChipReader):
         self.flankseqcols=["Forward_Seq","Design_Seq","Top_Seq","Plus_Seq"]
         self.flankseqcoln = self.fillcust(self.flankseqcols)
 
-    def proc_line(self,line_arr):
+    def proc_line(self,line_arr): #TODO: can move most of this to parent class
+        line_dict = dict()
         seqs_to_use = self.choose_flankseq(line_arr,self.flankseqcoln)
         cols_used = [self.flankseqcols[i] for i in seqs_to_use]
         coln_used = [self.flankseqcoln[i] for i in seqs_to_use]
         seqs = [line_arr[i] for i in coln_used]
+        # print(seqs_to_use) print(cols_used) print(coln_used) print(seqs)
         snp_id = self.getrs(line_arr[self.col_unique_id])
-        print(seqs_to_use)
-        print(cols_used)
-        print(coln_used)
-        print(seqs)
-        print("--------")
+        line_dict['flankseq_colnames'] = cols_used
+        line_dict['flankseq_seqs'] = seqs
+        line_dict['snp_id'] = snp_id
+        main_id = line_arr[self.col_unique_id]
+        if main_id != snp_id:
+            line_dict['uid'] = main_id
+        line_dict['chr'] = line_arr[self.col_chr]
+        line_dict['pos'] = line_arr[self.col_GRCh37_pos]
+        return line_dict
