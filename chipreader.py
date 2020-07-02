@@ -96,6 +96,18 @@ class ChipReader:
             seq2valid = True
         if not seq1valid or not seq2valid:
             return seq1valid,seq2valid #leave early
+        seq1valid=seq2valid=False #reset
+        seq1expunge = (seq1split[0]+seq1split[1]).upper()
+        seq2expunge = (seq2split[0]+seq2split[1]).upper()
+        #todo: add zero string length check here, or minimum sequence length
+        if len(seq1expunge) >= len(seq2expunge):
+            seq1valid = True
+            if seq2expunge not in seq1expunge:
+                seq2valid = True
+        else:
+            seq2valid = True
+            if seq1expunge not in seq2expunge:
+                seq1valid = True
         return seq1valid,seq2valid
 
     def choose_flankseq(self,line_arr,seq_inds):
@@ -148,6 +160,7 @@ class InfCorEx24v1a1(ChipReader):
 
     def proc_line(self,line_arr):
         seqs_to_use = self.choose_flankseq(line_arr,self.flankseqcoln)
-        print(seqs_to_use)
-        #todo: convert seqs_to_use back into line_arr coordinates
+        cols_used = [self.flankseqcols[i] for i in seqs_to_use]
+        print(cols_used)
+        coln_used = [self.flankseqcoln[i] for i in seqs_to_use]
         #todo: remove sequence repeats from the selection
