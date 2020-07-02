@@ -163,4 +163,4 @@ class InfCorEx24v1a1(ChipReader):
         cols_used = [self.flankseqcols[i] for i in seqs_to_use]
         print(cols_used)
         coln_used = [self.flankseqcoln[i] for i in seqs_to_use]
-        #todo: remove sequence repeats from the selection
+        snp_id = self.getrs(line_arr[self.col_unique_id])
