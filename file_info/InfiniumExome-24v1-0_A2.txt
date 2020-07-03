@@ -7,7 +7,7 @@
 6 AddressB_ID: first few are empty 
 7 AlleleB_ProbeSeq: "first few empty"
 8 GenomeBuild: 38
-9 Chr: int
+9 Chr: int/not padded
 10 MapInfo: probably pos (203126567, 96233179, 119287852)
 11 Ploidy
 12 Species

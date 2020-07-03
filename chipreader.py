@@ -6,6 +6,9 @@ import csv
 class ZeroLimit(Exception):
     pass
 
+class StrandError(Exception):
+    pass
+
 class ChipReader:
 
     def __init__(self,fname,delim=',',quote='"'):
@@ -20,14 +23,19 @@ class ChipReader:
         self.col_chr = None
         self.col_GRCh37_pos = None
         self.col_GRCh38_pos = None
-        self.col_flank_seq = None
-        self.col_flank_strand = None
+        self.col_flank_seq = None #if multiple use flankseqcols
+        self.col_flank_strand = None # if multiple use flankseqcols_strand
         self.flankseqcols = None # col titles of flank seqs when there are multiple
         self.flankseqcoln = None # col number ^ fillcust(self.flankseqcols)
         self.flankseqcols_strand = None # col titles of flank strand, corresponding to flankseqcols 
         self.flankseqcoln_strand = None # col number of flank strand, filled with ^
-        self.col_probe_seq = None
-        self.col_probe_strand = None
+        self.col_probe_seq = None # if multiple use probseq_cols
+        self.col_probe_strand = None #if multiple use probstrand_cols 
+        self.probseq_cols = None # col titles of probes
+        self.probseq_coln = None #col number of probe seqs (fillcust(self.probseq_cols))
+        self.probstrand_cols = None # col titles of probe strand
+        self.probstrand_coln = None # col number of prob strand (fillcust(self.probstrand_cols))
+        self.datasource=os.path.basename(fname)
         self.load_cols()
         self.load_custom()
 
@@ -167,13 +175,15 @@ class ChipReader:
         if main_id != snp_id:
             line_dict['uid'] = main_id
         line_dict['chr'] = line_arr[self.col_chr]
-        line_dict['pos'] = line_arr[self.col_GRCh37_pos]
+        line_dict['pos'] = line_arr[self.col_GRCh37_pos] if self.col_GRCh37_pos else line_arr[self.col_GRCh38_pos]
+        if self.probseq_cols:
+            line_dict['probe_colnames'] = self.probseq_cols
+            line_dict['probe_seqs'] = [line_arr[i] for i in self.probseq_coln]
 
 class InfCorEx24v1a1(ChipReader):
 
     def __init__(self,fname):
         super().__init__(fname)
-        self.datasource=os.path.basename(fname)
         self.GRCh37='37'
 
     def load_cols(self):
@@ -185,8 +195,46 @@ class InfCorEx24v1a1(ChipReader):
         self.flankseqcols=["Forward_Seq","Design_Seq","Top_Seq","Plus_Seq"]
         self.flankseqcoln = self.fillcust(self.flankseqcols)
 
-    def proc_line(self,line_arr): #TODO: can move most of this to parent class
+    def proc_line(self,line_arr): 
         line_dict = dict()
         self.fill_flankseqs(line_arr,line_dict)
         self.fill_general(line_arr,line_dict) 
         return line_dict
+
+class InfCorEx24v1_1a2(ChipReader):
+    # test excerpt: /mnt/HPC/processed/mr875/tasks/dsp367/InfiniumExome-24v1-0_A2_Eg.csv
+    # location: /mnt/HPC/processed/Metadata/variant_annotation_grch38/InfiniumExome-24v1-0_A2.csv
+    def __init__(self,fname):
+        super().__init__(fname)
+        self.GRCh38='38'
+
+    def load_cols(self):
+        self.col_unique_id = self.colnum('Name')
+        self.col_chr = self.colnum('Chr')
+        self.col_GRCh38_pos = self.colnum('MapInfo')
+
+    def load_custom(self):
+        self.title_topgenseq = "TopGenomicSeq"
+        self.title_sourceseq = "SourceSeq"
+        self.col_flank_strand = self.colnum('SourceStrand')
+        self.flankseqcols = [self.title_sourceseq, self.title_topgenseq]
+        self.flankseqcoln = self.fillcust(self.flankseqcols)
+        self.probseq_cols = ['AlleleA_ProbeSeq','AlleleB_ProbeSeq']
+        self.probseq_coln = self.fillcust(self.probseq_cols)
+
+    def proc_line(self,line_arr):
+        line_dict = dict()
+        self.fill_flankseqs(line_arr,line_dict)
+        flankseq_colnames = line_dict['flankseq_colnames']
+        flankstrand_vals = []
+        for colname in flankseq_colnames:
+            if colname == self.title_topgenseq:
+                flankstrand_vals.append("TOP")
+            elif colname == self.title_sourceseq:
+                flankstrand_vals.append(line_arr[self.col_flank_strand])
+            else:
+                raise StrandError("can't get strand value for %s" % (colname))
+        line_dict['flankstrand_vals'] = flankstrand_vals
+        self.fill_general(line_arr,line_dict)
+        return line_dict
+        
