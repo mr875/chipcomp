@@ -28,7 +28,14 @@ class ChipReader:
         self.flankseqcoln_strand = None # col number of flank strand, filled with ^
         self.col_probe_seq = None
         self.col_probe_strand = None
+        self.load_cols()
+        self.load_custom()
 
+    def load_cols(self):
+        raise NotImplementedError
+
+    def load_custom(self):
+        raise NotImplementedError
 
     def linebyline(self,limit=None):
         count=0
@@ -144,13 +151,29 @@ class ChipReader:
         #print(seqnum)  # unique and non faulty seqs to include (their indexes in self.flankseqcoln)
         return list(seqnum)
 
+    def fill_flankseqs(self,line_arr,line_dict):
+        seqs_to_use = self.choose_flankseq(line_arr,self.flankseqcoln)
+        cols_used = [self.flankseqcols[i] for i in seqs_to_use]
+        coln_used = [self.flankseqcoln[i] for i in seqs_to_use]
+        seqs = [line_arr[i] for i in coln_used]
+        # print(seqs_to_use) print(cols_used) print(coln_used) print(seqs)
+        line_dict['flankseq_colnames'] = cols_used
+        line_dict['flankseq_seqs'] = seqs
+
+    def fill_general(self,line_arr,line_dict):
+        snp_id = self.getrs(line_arr[self.col_unique_id])
+        line_dict['snp_id'] = snp_id
+        main_id = line_arr[self.col_unique_id]
+        if main_id != snp_id:
+            line_dict['uid'] = main_id
+        line_dict['chr'] = line_arr[self.col_chr]
+        line_dict['pos'] = line_arr[self.col_GRCh37_pos]
+
 class InfCorEx24v1a1(ChipReader):
 
     def __init__(self,fname):
         super().__init__(fname)
         self.datasource=os.path.basename(fname)
-        self.load_cols()
-        self.load_custom()
         self.GRCh37='37'
 
     def load_cols(self):
@@ -164,18 +187,6 @@ class InfCorEx24v1a1(ChipReader):
 
     def proc_line(self,line_arr): #TODO: can move most of this to parent class
         line_dict = dict()
-        seqs_to_use = self.choose_flankseq(line_arr,self.flankseqcoln)
-        cols_used = [self.flankseqcols[i] for i in seqs_to_use]
-        coln_used = [self.flankseqcoln[i] for i in seqs_to_use]
-        seqs = [line_arr[i] for i in coln_used]
-        # print(seqs_to_use) print(cols_used) print(coln_used) print(seqs)
-        snp_id = self.getrs(line_arr[self.col_unique_id])
-        line_dict['flankseq_colnames'] = cols_used
-        line_dict['flankseq_seqs'] = seqs
-        line_dict['snp_id'] = snp_id
-        main_id = line_arr[self.col_unique_id]
-        if main_id != snp_id:
-            line_dict['uid'] = main_id
-        line_dict['chr'] = line_arr[self.col_chr]
-        line_dict['pos'] = line_arr[self.col_GRCh37_pos]
+        self.fill_flankseqs(line_arr,line_dict)
+        self.fill_general(line_arr,line_dict) 
         return line_dict
