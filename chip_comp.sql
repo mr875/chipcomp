@@ -1,7 +1,7 @@
 DROP TABLE IF EXISTS consensus;
 CREATE TABLE consensus (
   id char(38) NOT NULL,
-  dbSNPid char(38) NOT NULL,
+  snp_id char(38) DEFAULT NULL,
   chr char(4) DEFAULT NULL,
   GRCh37_pos int unsigned DEFAULT NULL,
   GRCh38_pos int unsigned DEFAULT NULL,

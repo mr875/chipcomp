@@ -1,6 +1,14 @@
 import mysql.connector
 import configparser
-
+""" Example Usage
+chip=DBConnect("chip_comp")
+query2 = ("show tables")
+chipcursor=chip.getCursor()
+chipcursor.execute(query2)
+for row in chipcursor.fetchall():
+    print(row)
+chip.close()
+"""
 class DBConnect:
 
     def __init__(self,db="br",usr=None,pw=None,hst="localhost"):
@@ -10,7 +18,8 @@ class DBConnect:
             self.user=usr
             self.pw=pw
         self.dbs = mysql.connector.connect(user=self.user, password=self.pw, host=hst, database=db)
-        self.cursor = self.dbs.cursor()
+        #self.cursor = self.dbs.cursor()
+        self.cursors = []
 
     def loadConf(self):
         config = configparser.ConfigParser()
@@ -19,9 +28,16 @@ class DBConnect:
         self.pw=config['user']['pw']
 
     def getCursor(self):
-        return self.cursor
+        new_curs = self.dbs.cursor()
+        self.cursors.append(new_curs)
+        return new_curs
+
+    def resetCursors(self):
+        for c in self.cursors:
+            c.close()
+        self.cursors=[]
 
     def close(self):
-        self.cursor.close()
+        self.resetCursors() 
         self.dbs.close()
 

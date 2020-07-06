@@ -153,7 +153,7 @@ class ChipReader:
             if flank:
                 seq1valid, seq2valid = self.flankcomp(seqs[comb[0]],seqs[comb[1]])
             else:
-                seq1valid, seq2valid = self.flankcomp(seqs[comb[0]],seqs[comb[1]],False)
+                seq1valid, seq2valid = self.gencomp(seqs[comb[0]],seqs[comb[1]])
             combinclude = False 
             if not seq1valid:
                 skip.add(comb[0])
@@ -183,6 +183,14 @@ class ChipReader:
         line_dict['flankseq_colnames'] = cols_used
         line_dict['flankseq_seqs'] = seqs
 
+    def fill_probeseqs(self,line_arr,line_dict):
+        seqs_to_use = self.choose_flankseq(line_arr,self.probseq_coln,False)
+        cols_used = [self.probseq_cols[i] for i in seqs_to_use]
+        coln_used = [self.probseq_coln[i] for i in seqs_to_use]
+        seqs = [line_arr[i] for i in coln_used]
+        line_dict['probseq_colnames'] = cols_used
+        line_dict['probseq_seqs'] = seqs
+
     def fill_general(self,line_arr,line_dict):
         snp_id = self.getrs(line_arr[self.col_unique_id])
         line_dict['snp_id'] = snp_id
@@ -191,9 +199,6 @@ class ChipReader:
             line_dict['uid'] = main_id
         line_dict['chr'] = line_arr[self.col_chr]
         line_dict['pos'] = line_arr[self.col_GRCh37_pos] if self.col_GRCh37_pos else line_arr[self.col_GRCh38_pos]
-        if self.probseq_cols:
-            line_dict['probe_colnames'] = self.probseq_cols
-            line_dict['probe_seqs'] = [line_arr[i] for i in self.probseq_coln]
 
 class InfCorEx24v1a1(ChipReader):
 
@@ -250,6 +255,7 @@ class InfCorEx24v1_1a2(ChipReader):
             else:
                 raise StrandError("can't get strand value for %s" % (colname))
         line_dict['flankstrand_vals'] = flankstrand_vals
+        self.fill_probeseqs(line_arr,line_dict)
         self.fill_general(line_arr,line_dict)
         return line_dict
         
