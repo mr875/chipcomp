@@ -115,21 +115,33 @@ class ChipReader:
             seq2valid = True
         if not seq1valid or not seq2valid:
             return seq1valid,seq2valid #leave early
-        seq1valid=seq2valid=False #reset
+        #seq1valid=seq2valid=False #reset
         seq1expunge = (seq1split[0]+seq1split[1]).upper()
         seq2expunge = (seq2split[0]+seq2split[1]).upper()
+        return self.gencomp(seq1expunge,seq2expunge)
+
+    def gencomp(self,seq1,seq2):
         #todo: add zero string length check here, or minimum sequence length
-        if len(seq1expunge) >= len(seq2expunge):
+        seq1valid = False
+        seq2valid = False
+        if len(seq1) > 25:
             seq1valid = True
-            if seq2expunge not in seq1expunge:
+        if len(seq2) > 25:
+            seq2valid = True
+        if not seq1valid or not seq2valid:
+            return seq1valid,seq2valid  #leave early
+        seq1valid=seq2valid=False
+        if len(seq1) >= len(seq2):
+            seq1valid = True
+            if seq2 not in seq1:
                 seq2valid = True
         else:
             seq2valid = True
-            if seq1expunge not in seq2expunge:
+            if seq1 not in seq2:
                 seq1valid = True
         return seq1valid,seq2valid
 
-    def choose_flankseq(self,line_arr,seq_inds):
+    def choose_flankseq(self,line_arr,seq_inds,flank = True):
         seqs = [line_arr[coln] for coln in seq_inds]
         comblist = self.comblist(len(seqs))
         #print(comblist)  # all comparisons
@@ -138,7 +150,10 @@ class ChipReader:
         for ind,comb in enumerate(comblist): 
             if set(comb) & skip:
                 continue
-            seq1valid, seq2valid = self.flankcomp(seqs[comb[0]],seqs[comb[1]])
+            if flank:
+                seq1valid, seq2valid = self.flankcomp(seqs[comb[0]],seqs[comb[1]])
+            else:
+                seq1valid, seq2valid = self.flankcomp(seqs[comb[0]],seqs[comb[1]],False)
             combinclude = False 
             if not seq1valid:
                 skip.add(comb[0])
