@@ -37,6 +37,9 @@ class DBConnect:
             c.close()
         self.cursors=[]
 
+    def commit(self):
+        self.dbs.commit()
+
     def close(self):
         self.resetCursors() 
         self.dbs.close()

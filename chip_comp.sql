@@ -9,7 +9,7 @@ CREATE TABLE consensus (
   flank_strand char(5) DEFAULT NULL,
   probe_seq varchar(1040) DEFAULT NULL,
   probe_strand char(5) DEFAULT NULL,
-  uid_datasource varchar(40) DEFAULT NULL,
+  uid_datasource varchar(40) NOT NULL,
   PRIMARY KEY (id)
 );
 DROP TABLE IF EXISTS alt_ids;
@@ -17,9 +17,7 @@ CREATE TABLE alt_ids(
 	id char(38) NOT NULL,
 	alt_id char(86) NOT NULL,
 	datasource varchar(40) NOT NULL,
-	colname varchar(40) NOT NULL,
-	match_count tinyint unsigned DEFAULT 1,
-	PRIMARY KEY (id,alt_id)
+	PRIMARY KEY (id,alt_id,datasource)
 );
 DROP TABLE IF EXISTS positions;
 CREATE TABLE positions(
