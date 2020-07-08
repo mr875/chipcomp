@@ -221,7 +221,7 @@ class InfCorEx24v1a1(ChipReader):
         self.fill_general(line_arr,line_dict) 
         return line_dict
 
-class InfCorEx24v1_1a2(ChipReader):
+class InfEx24v1a2(ChipReader):
     # test excerpt: /mnt/HPC/processed/mr875/tasks/dsp367/InfiniumExome-24v1-0_A2_Eg.csv
     # location: /mnt/HPC/processed/Metadata/variant_annotation_grch38/InfiniumExome-24v1-0_A2.csv
     def __init__(self,fname):
