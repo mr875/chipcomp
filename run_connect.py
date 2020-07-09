@@ -39,6 +39,9 @@ def snpid_swapin(curs,uid_to_swapout,db_snp,old_ds,new_ds,this_altid=None):
     if this_altid:
         curs.execute("INSERT INTO alt_ids (id, alt_id, datasource) VALUES (%s, %s, %s)",(db_snp,this_altid,new_ds))
 
+def snp_present(curs,uid,datasource):
+    curs.execute("INSERT IGNORE INTO snp_present (id,datasource) VALUES (%s,%s)",(uid,datasource))
+
 def compcons_pos(chrm,gr37,gr38):
     pass
 
@@ -97,6 +100,7 @@ for line in reader.linebyline():
                 add_primary(curs,secondary_id,new_ds)
                 chip.commit()
         #else: secondary id already in consensus table, main_id already switched
+    snp_present(curs,main_id,new_ds)
 
 chip.close()
 
