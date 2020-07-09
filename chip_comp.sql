@@ -58,7 +58,7 @@ DROP TABLE IF EXISTS snp_present;
 CREATE TABLE snp_present(
 	id char(38) NOT NULL,
 	datasource varchar(40) NOT NULL,
-	chipname varchar(40) NOT NULL,
-       	match_crit char(10) DEFAULT NULL,
+	chipname varchar(40) DEFAULT NULL,
+    match_crit char(10) DEFAULT NULL,
 	PRIMARY KEY (id,datasource)
 );	
