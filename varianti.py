@@ -93,3 +93,44 @@ class VariantI:
                 self.add_primary(self.secondary_id,self.datasource)
         #else: secondary id already in consensus table, main_id already switched
 
+    def flankmatch(self,thisflank,dbflank):
+        thisflank = (thisflank.split('[')[0]+thisflank.split(']')[1]).upper()
+        dbflank = (dbflank.split('[')[0]+dbflank.split(']')[1]).upper()
+        if thisflank in dbflank:
+            return 1 # new flank is shorter/equal to db version, count+1 on existing
+        if dbflank in thisflank:
+            return 2 # new flank is longer, swap in
+        return 0  # new flank is different
+
+    def countplus(self,searchby,table,column):
+        q = "UPDATE "+table+" SET match_count=match_count+1 WHERE id = %s AND "+column+" = %s AND datasource <> %s"
+        self.curs.execute(q,(self.main_id,searchby,self.datasource))
+
+    def swapflank(self):
+        pass
+
+    def insertflank(self):
+        pass
+
+
+    def log_flank(self):
+        self.curs.execute("SELECT flank_seq FROM flank WHERE id = %s",(self.main_id,))    
+        indb = self.curs.fetchall() #list of tuples
+        theseflanks = []
+        if 'flankseq_seqs' in self.dic:
+            theseflanks = self.dic['flankseq_seqs']
+        for ind,thisflank in enumerate(theseflanks):
+            toadd = True
+            for dbflank in indb:
+                dbflank = dbflank[0]
+                matchtype = self.flankmatch(thisflank,dbflank)
+                if matchtype == 1:
+                    self.countplus(dbflank,"flank","flank_seq")
+                    toadd = False
+                    break
+                if matchtype == 2:
+                    self.swapflank()
+                    toadd = False
+                    break
+            if toadd:
+                self.insertflank()
