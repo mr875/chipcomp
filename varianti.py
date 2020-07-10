@@ -48,6 +48,7 @@ class VariantI:
         self.curs.execute("UPDATE positions SET id = %s where id = %s",(db_snp,uid_to_swapout))
         self.curs.execute("UPDATE probes SET id = %s where id = %s",(db_snp,uid_to_swapout))
         self.curs.execute("UPDATE snp_present SET id = %s where id = %s",(db_snp,uid_to_swapout))
+        self.curs.execute("UPDATE match_count SET id = %s where id = %s",(db_snp,uid_to_swapout))
         self.curs.execute("INSERT INTO alt_ids (id, alt_id, datasource) VALUES (%s, %s, %s)",(db_snp,uid_to_swapout,old_ds))
         if this_altid:
             self.curs.execute("INSERT INTO alt_ids (id, alt_id, datasource) VALUES (%s, %s, %s)",(db_snp,this_altid,new_ds))
@@ -106,6 +107,11 @@ class VariantI:
         q = "UPDATE "+table+" SET match_count=match_count+1 WHERE id = %s AND "+column+" = %s AND datasource <> %s"
         self.curs.execute(q,(self.main_id,searchby,self.datasource))
 
+    def addmatch(self,dbflank,table):
+        q = "INSERT IGNORE INTO match_count (id, tabl, match_value, uid_datasource) VALUES (%s, %s, %s, %s)"
+        vals = (self.main_id,table,dbflank,self.datasource)
+        self.curs.execute(q,vals) #print(q % vals) 
+
     def swapflank(self):
         pass
 
@@ -125,7 +131,8 @@ class VariantI:
                 dbflank = dbflank[0]
                 matchtype = self.flankmatch(thisflank,dbflank)
                 if matchtype == 1:
-                    self.countplus(dbflank,"flank","flank_seq")
+                    #self.countplus(dbflank,"flank","flank_seq")
+                    self.addmatch(dbflank,"flank")
                     toadd = False
                     break
                 if matchtype == 2:

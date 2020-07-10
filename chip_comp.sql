@@ -12,6 +12,15 @@ CREATE TABLE consensus (
   uid_datasource varchar(40) NOT NULL,
   PRIMARY KEY (id)
 );
+DROP TABLE IF EXISTS match_count;
+CREATE TABLE match_count(
+    id char(38) NOT NULL,
+    tabl char(20) NOT NULL,
+    match_value varchar(1040) NOT NULL,
+    uid_datasource varchar(40) NOT NULL,
+    PRIMARY KEY (id,match_value,uid_datasource)
+);
+
 DROP TABLE IF EXISTS alt_ids;
 CREATE TABLE alt_ids(
 	id char(38) NOT NULL,
