@@ -107,14 +107,23 @@ class VariantI:
         q = "UPDATE "+table+" SET match_count=match_count+1 WHERE id = %s AND "+column+" = %s AND datasource <> %s"
         self.curs.execute(q,(self.main_id,searchby,self.datasource))
 
-    def addmatch(self,dbflank,table):
+    def addmatch(self,dbflank,table,ds=None):
+        if not ds:
+            ds = self.datasource
         q = "INSERT IGNORE INTO match_count (id, tabl, match_value, datasource) VALUES (%s, %s, %s, %s)"
-        vals = (self.main_id,table,dbflank,self.datasource)
+        vals = (self.main_id,table,dbflank,ds)
         self.curs.execute(q,vals) #print(q % vals) 
 
-    def swapflank(self):
-        pass
-        #oldrow = self.curs.execute("SELECT ")
+    def swapflank(self,dbflank):
+        args = (self.main_id,dbflank)
+        select = "SELECT datasource "
+        delete = "DELETE "
+        row = "FROM flank WHERE id = %s AND flanq_seq = %s"
+        oldds = self.curs.execute(select+row,args)
+        oldds = oldds.fetchall()[0][0]
+        self.addmatch(dbflank,"flank",oldds)
+        self.curs.execute(delete+row,args)
+        self.insertflank()
 
     def insertflank(self):
         pass
