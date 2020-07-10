@@ -17,8 +17,8 @@ CREATE TABLE match_count(
     id char(38) NOT NULL,
     tabl char(20) NOT NULL,
     match_value varchar(1040) NOT NULL,
-    uid_datasource varchar(40) NOT NULL,
-    PRIMARY KEY (id,match_value,uid_datasource)
+    datasource varchar(40) NOT NULL,
+    PRIMARY KEY (id,match_value,datasource)
 );
 
 DROP TABLE IF EXISTS alt_ids;

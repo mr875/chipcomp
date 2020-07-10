@@ -103,17 +103,18 @@ class VariantI:
             return 2 # new flank is longer, swap in
         return 0  # new flank is different
 
-    def countplus(self,searchby,table,column):
+    def countplus(self,searchby,table,column): #lighter version of addmatch(), will do false counts if run on the same datasource more than once
         q = "UPDATE "+table+" SET match_count=match_count+1 WHERE id = %s AND "+column+" = %s AND datasource <> %s"
         self.curs.execute(q,(self.main_id,searchby,self.datasource))
 
     def addmatch(self,dbflank,table):
-        q = "INSERT IGNORE INTO match_count (id, tabl, match_value, uid_datasource) VALUES (%s, %s, %s, %s)"
+        q = "INSERT IGNORE INTO match_count (id, tabl, match_value, datasource) VALUES (%s, %s, %s, %s)"
         vals = (self.main_id,table,dbflank,self.datasource)
         self.curs.execute(q,vals) #print(q % vals) 
 
     def swapflank(self):
         pass
+        #oldrow = self.curs.execute("SELECT ")
 
     def insertflank(self):
         pass
@@ -136,7 +137,7 @@ class VariantI:
                     toadd = False
                     break
                 if matchtype == 2:
-                    self.swapflank()
+                    self.swapflank(dbflank)
                     toadd = False
                     break
             if toadd:
