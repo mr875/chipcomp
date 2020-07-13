@@ -182,6 +182,7 @@ class ChipReader:
         # print(seqs_to_use) print(cols_used) print(coln_used) print(seqs)
         line_dict['flankseq_colnames'] = cols_used
         line_dict['flankseq_seqs'] = seqs
+        #TODO: need to handle line_dict['flankstrand_vals'] (self.flankseqcols_strand) 
 
     def fill_probeseqs(self,line_arr,line_dict):
         seqs_to_use = self.choose_flankseq(line_arr,self.probseq_coln,False)
