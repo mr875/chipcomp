@@ -114,40 +114,51 @@ class VariantI:
         vals = (self.main_id,table,dbflank,ds)
         self.curs.execute(q,vals) #print(q % vals) 
 
-    def swapflank(self,dbflank):
-        args = (self.main_id,dbflank)
+    def squeezeflank(self,dbflank):
+        where = (self.main_id,dbflank)
         select = "SELECT datasource "
         delete = "DELETE "
-        row = "FROM flank WHERE id = %s AND flanq_seq = %s"
-        oldds = self.curs.execute(select+row,args)
-        oldds = oldds.fetchall()[0][0]
+        row = "FROM flank WHERE id = %s AND flank_seq = %s"
+        self.curs.execute(select+row,where)
+        #print(self.curs.fetchall())
+        oldds = self.curs.fetchall()[0][0]
         self.addmatch(dbflank,"flank",oldds)
-        self.curs.execute(delete+row,args)
-        self.insertflank()
+        self.curs.execute(delete+row,where)
 
-    def insertflank(self):
-        pass
-
+    def insertflank(self,thisflank,colname,fstrand,multiple):
+        q = "INSERT INTO flank (id,colname,datasource,flank_seq,flank_strand,multiple) VALUES (%s, %s, %s, %s, %s, %s)"
+        vals = (self.main_id, colname, self.datasource,thisflank,fstrand,multiple)
+        self.curs.execute(q,vals)
 
     def log_flank(self):
-        self.curs.execute("SELECT flank_seq FROM flank WHERE id = %s",(self.main_id,))    
+        self.curs.execute("SELECT flank_seq,datasource FROM flank WHERE id = %s",(self.main_id,))    
         indb = self.curs.fetchall() #list of tuples
         theseflanks = []
+        thesecolnames = []
+        multiple = False
+        thesefstrand = []
         if 'flankseq_seqs' in self.dic:
+            multiple = True
             theseflanks = self.dic['flankseq_seqs']
+            thesecolnames = self.dic['flankseq_colnames']
+            if 'flankstrand_vals' not in self.dic:
+                thesefstrand = [None for f in theseflanks]
+            else:
+                thesefstrand = self.dic['flankstrand_vals']
         for ind,thisflank in enumerate(theseflanks):
             toadd = True
-            for dbflank in indb:
-                dbflank = dbflank[0]
+            for dbflank,dbflankds in indb:
+                #dbflank = dbflank[0]
+                #dbflankds = dbflank[1]
                 matchtype = self.flankmatch(thisflank,dbflank)
-                if matchtype == 1:
+                if matchtype == 1: # match found, needs to be distinct ds to be added to match_count table
                     #self.countplus(dbflank,"flank","flank_seq")
-                    self.addmatch(dbflank,"flank")
+                    if self.datasource != dbflankds:
+                        self.addmatch(dbflank,"flank")
                     toadd = False
                     break
-                if matchtype == 2:
-                    self.swapflank(dbflank)
-                    toadd = False
+                if matchtype == 2: # swap in thisflank
+                    self.squeezeflank(dbflank) # precedes insertflank to delete from flank table and add to match_count table
                     break
             if toadd:
-                self.insertflank()
+                self.insertflank(thisflank,thesecolnames[ind],thesefstrand[ind],multiple) 
