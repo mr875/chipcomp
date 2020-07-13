@@ -191,6 +191,7 @@ class ChipReader:
         seqs = [line_arr[i] for i in coln_used]
         line_dict['probseq_colnames'] = cols_used
         line_dict['probseq_seqs'] = seqs
+        #line_dict['probestrand_vals']
 
     def fill_general(self,line_arr,line_dict):
         snp_id = self.getrs(line_arr[self.col_unique_id])
