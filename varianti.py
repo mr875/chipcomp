@@ -94,9 +94,10 @@ class VariantI:
                 self.add_primary(self.secondary_id,self.datasource)
         #else: secondary id already in consensus table, main_id already switched
 
-    def flankmatch(self,thisflank,dbflank):
-        thisflank = (thisflank.split('[')[0]+thisflank.split(']')[1]).upper()
-        dbflank = (dbflank.split('[')[0]+dbflank.split(']')[1]).upper()
+    def flankmatch(self,thisflank,dbflank,probe=False):
+        if not probe:
+            thisflank = (thisflank.split('[')[0]+thisflank.split(']')[1]).upper()
+            dbflank = (dbflank.split('[')[0]+dbflank.split(']')[1]).upper()
         if thisflank in dbflank:
             return 1 # new flank is shorter/equal to db version, count+1 on existing
         if dbflank in thisflank:
@@ -114,19 +115,24 @@ class VariantI:
         vals = (self.main_id,table,dbflank,ds)
         self.curs.execute(q,vals) #print(q % vals) 
 
-    def squeezeflank(self,dbflank):
+    def squeezeflank(self,dbflank,probe=False):
         where = (self.main_id,dbflank)
         select = "SELECT datasource "
         delete = "DELETE "
+        table = "flank"
         row = "FROM flank WHERE id = %s AND flank_seq = %s"
+        if probe:
+            row = "FROM probes WHERE id = %s AND probe_seq = %s"
+            table = "probes"
         self.curs.execute(select+row,where)
-        #print(self.curs.fetchall())
         oldds = self.curs.fetchall()[0][0]
-        self.addmatch(dbflank,"flank",oldds)
+        self.addmatch(dbflank,table,oldds)
         self.curs.execute(delete+row,where)
 
-    def insertflank(self,thisflank,colname,fstrand,multiple):
+    def insertflank(self,thisflank,colname,fstrand,multiple,probe=False):
         q = "INSERT INTO flank (id,colname,datasource,flank_seq,flank_strand,multiple) VALUES (%s, %s, %s, %s, %s, %s)"
+        if probe:
+            q = "INSERT INTO probes (id,colname,datasource,probe_seq,probe_strand,multiple) VALUES (%s, %s, %s, %s, %s, %s)"
         vals = (self.main_id, colname, self.datasource,thisflank,fstrand,multiple)
         self.curs.execute(q,vals)
 
@@ -148,8 +154,6 @@ class VariantI:
         for ind,thisflank in enumerate(theseflanks):
             toadd = True
             for dbflank,dbflankds in indb:
-                #dbflank = dbflank[0]
-                #dbflankds = dbflank[1]
                 matchtype = self.flankmatch(thisflank,dbflank)
                 if matchtype == 1: # match found, needs to be distinct ds to be added to match_count table
                     #self.countplus(dbflank,"flank","flank_seq")
@@ -162,3 +166,33 @@ class VariantI:
                     break
             if toadd:
                 self.insertflank(thisflank,thesecolnames[ind],thesefstrand[ind],multiple) 
+
+    def log_probe(self):
+        self.curs.execute("SELECT probe_seq,datasource FROM probes WHERE id = %s",(self.main_id,))    
+        indb = self.curs.fetchall() #list of tuples
+        theseprobes = [] #probseq_seqs
+        thesecolnames = [] #probseq_colnames
+        thesepstrand = [] # no examples yet, from chipreader.probstrand_cols
+        multiple = False
+        if 'probseq_seqs' in self.dic:
+            multiple = True
+            theseprobes = self.dic['probseq_seqs']
+            thesecolnames = self.dic['probseq_colnames']
+            if 'probestrand_vals' not in self.dic:
+                thesepstrand = [None for p in theseprobes]
+            else:
+                thesepstrand = self.dic['probestrand_vals']
+        for ind,thisprobe in enumerate(theseprobes):
+            toadd = True
+            for dbprobe,dbprobeds in indb:
+                matchtype = self.flankmatch(thisprobe,dbprobeds,probe=True)
+                if matchtype == 1:
+                    if self.datasource != dbprobeds:
+                        self.addmatch(dbprobe,"probes")
+                    toadd = False
+                    break
+                if matchtype == 2:
+                    self.squeezeflank(dbprobe,probe=True)
+                    break
+            if toadd:
+                self.insertflank(thisprobe,thesecolnames[ind],thesepstrand[ind],multiple,probe=True)
