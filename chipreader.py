@@ -261,3 +261,10 @@ class InfEx24v1a2(ChipReader):
         self.fill_general(line_arr,line_dict)
         return line_dict
         
+class Dil(ChipReader):
+    # example excerpt: /mnt/HPC/processed/mr875/tasks/dsp367/DIL_annotation_Eg.csv 
+    # original file: /mnt/HPC/processed/Metadata/variant_annotation/DIL_annotation.csv
+
+    def __init__(self,fname):
+        super().__init__(fname)
+        self.GRCh38='37'

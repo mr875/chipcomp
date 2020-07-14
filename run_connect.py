@@ -12,11 +12,11 @@ def readin(chip,reader):
         dic = reader.proc_line(line)
         dbsnpid = dic['snp_id']
         variant = VariantI(curs,dic,new_ds,build)
-        chip.commit()
+#        chip.commit()
         variant.log_flank()
-        chip.commit()
+#        chip.commit()
         variant.log_probe()
-        chip.commit()
+#        chip.commit()
         variant.log_coord()
         chip.commit()
 
