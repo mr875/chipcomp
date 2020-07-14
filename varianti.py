@@ -205,7 +205,7 @@ class VariantI:
 
     def log_coord(self):
         self.curs.execute("SELECT pos FROM positions WHERE id = %s AND build = %s",(self.main_id,self.build))
-        chrm = self.dic['chr']
+        chrm = self.dic['chr'] #TODO: support alternative labels for X, Y. MT
         pos = self.dic['pos']
         indb = self.curs.fetchall()
         indb = [st[0] for st in indb] 
