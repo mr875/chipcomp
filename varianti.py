@@ -210,6 +210,11 @@ class VariantI:
         indb = self.curs.fetchall()
         indb = [st[0] for st in indb] 
         assert isinstance(pos,int)
+        posadd = True
         for dbpos in indb:
+            assert isinstance(dbpos,int)
             if dbpos == pos:
-                pass
+                posadd = False
+        if posadd:
+            vals = (self.main_id,chrm,pos,self.build,self.datasource)
+            self.curs.execute("INSERT INTO positions (id,chr,pos,build,datasource) VALUES (%s,%s,%s,%s,%s)",vals)
