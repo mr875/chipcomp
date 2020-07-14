@@ -1,10 +1,11 @@
 class VariantI:
 
-    def __init__(self,curs,row_dic,ds):
+    def __init__(self,curs,row_dic,ds,build):
         self.dic = row_dic
         self.secondary_id = None
         self.main_id = None
         self.datasource = ds
+        self.build = build
         if 'uid' in self.dic:
             self.secondary_id = self.dic['uid']
         self.dbsnpid = self.dic['snp_id']
@@ -95,9 +96,11 @@ class VariantI:
         #else: secondary id already in consensus table, main_id already switched
 
     def flankmatch(self,thisflank,dbflank,probe=False):
+        thisflank = thisflank.upper()
+        dbflank = dbflank.upper()
         if not probe:
-            thisflank = (thisflank.split('[')[0]+thisflank.split(']')[1]).upper()
-            dbflank = (dbflank.split('[')[0]+dbflank.split(']')[1]).upper()
+            thisflank = thisflank.split('[')[0]+thisflank.split(']')[1]
+            dbflank = dbflank.split('[')[0]+dbflank.split(']')[1]
         if thisflank in dbflank:
             return 1 # new flank is shorter/equal to db version, count+1 on existing
         if dbflank in thisflank:
@@ -125,7 +128,10 @@ class VariantI:
             row = "FROM probes WHERE id = %s AND probe_seq = %s"
             table = "probes"
         self.curs.execute(select+row,where)
-        oldds = self.curs.fetchall()[0][0]
+        rowlist = self.curs.fetchall()
+        if not rowlist:
+            return  #db entry already deleted
+        oldds = rowlist[0][0]
         self.addmatch(dbflank,table,oldds)
         self.curs.execute(delete+row,where)
 
@@ -185,7 +191,7 @@ class VariantI:
         for ind,thisprobe in enumerate(theseprobes):
             toadd = True
             for dbprobe,dbprobeds in indb:
-                matchtype = self.flankmatch(thisprobe,dbprobeds,probe=True)
+                matchtype = self.flankmatch(thisprobe,dbprobe,probe=True)
                 if matchtype == 1:
                     if self.datasource != dbprobeds:
                         self.addmatch(dbprobe,"probes")
@@ -196,3 +202,14 @@ class VariantI:
                     break
             if toadd:
                 self.insertflank(thisprobe,thesecolnames[ind],thesepstrand[ind],multiple,probe=True)
+
+    def log_coord(self):
+        self.curs.execute("SELECT pos FROM positions WHERE id = %s AND build = %s",(self.main_id,self.build))
+        chrm = self.dic['chr']
+        pos = self.dic['pos']
+        indb = self.curs.fetchall()
+        indb = [st[0] for st in indb] 
+        assert isinstance(pos,int)
+        for dbpos in indb:
+            if dbpos == pos:
+                pass

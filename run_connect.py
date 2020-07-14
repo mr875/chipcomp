@@ -4,16 +4,20 @@ from connect import DBConnect
 
 def readin(chip,reader):
     curs = chip.getCursor()
+    build = "38"
+    if reader.col_GRCh37_pos:
+        build = "37"
+    new_ds = reader.datasource
     for line in reader.linebyline():
-        new_ds = reader.datasource
         dic = reader.proc_line(line)
-        #print(dic)
         dbsnpid = dic['snp_id']
-        variant = VariantI(curs,dic,new_ds)
+        variant = VariantI(curs,dic,new_ds,build)
         chip.commit()
         variant.log_flank()
         chip.commit()
         variant.log_probe()
+        chip.commit()
+        variant.log_coord()
         chip.commit()
 
 readers = [InfCorEx24v1a1('/mnt/HPC/processed/mr875/tasks/dsp367/corev1_0_rsEg.csv'),
