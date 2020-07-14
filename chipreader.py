@@ -200,7 +200,7 @@ class ChipReader:
         if main_id != snp_id:
             line_dict['uid'] = main_id
         line_dict['chr'] = line_arr[self.col_chr]
-        line_dict['pos'] = line_arr[self.col_GRCh37_pos] if self.col_GRCh37_pos else line_arr[self.col_GRCh38_pos]
+        line_dict['pos'] = int(line_arr[self.col_GRCh37_pos]) if self.col_GRCh37_pos else int(line_arr[self.col_GRCh38_pos])
 
 class InfCorEx24v1a1(ChipReader):
 
