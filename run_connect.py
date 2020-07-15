@@ -16,9 +16,10 @@ def readin(chip,reader):
         variant.log_coord()
         chip.commit()
 
-#readers = [InfCorEx24v1a1('/mnt/HPC/processed/mr875/tasks/dsp367/corev1_0_rsEg.csv'),
- #       InfEx24v1a2('/mnt/HPC/processed/mr875/tasks/dsp367/InfiniumExome-24v1-0_A2_Eg.csv')]
-readers = [Dil('/mnt/HPC/processed/mr875/tasks/dsp367/DIL_annotation_Eg.csv')]
+readers = [InfCorEx24v1a1('/mnt/HPC/processed/mr875/tasks/dsp367/corev1_0_rsEg.csv'),
+        InfEx24v1a2('/mnt/HPC/processed/mr875/tasks/dsp367/InfiniumExome-24v1-0_A2_Eg.csv'),
+        Dil('/mnt/HPC/processed/mr875/tasks/dsp367/DIL_annotation_Eg.csv')]
+#readers = [Dil('/mnt/HPC/processed/mr875/tasks/dsp367/DIL_annotation_Eg.csv')]
 
 ch = DBConnect("chip_comp")
 for source in readers:
