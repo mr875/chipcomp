@@ -291,7 +291,7 @@ class Dil(ChipReader):
         if dbsnpid:
             line_dict['snp_id'] = dbsnpid
         line_dict['uid'] = line_arr[self.col_unique_id]
-        line_dict['pos'] = line_arr[self.col_GRCh37_pos]
+        line_dict['pos'] = int(line_arr[self.col_GRCh37_pos])
         chrom = line_arr[self.col_chr]
         line_dict['chr'] = chrom.replace('Hs','')
         return line_dict
