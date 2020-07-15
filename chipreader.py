@@ -282,7 +282,8 @@ class Dil(ChipReader):
 
     def proc_line(self,line_arr):
         line_dict = dict()
-        line_dict['flank_seq'] = "".join([line_arr[coln] for coln in self.flankseqcoln])
+        line_dict['flankseq'] = "".join([line_arr[coln] for coln in self.flankseqcoln])
+        line_dict['flankseq_colname'] = "3_col_merge"
         strand = line_arr[self.col_flank_strand].replace('-1','-').replace('1','+')
         line_dict['flankstrand_val'] = strand
         line_dict['snp_id'] = None
