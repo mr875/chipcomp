@@ -157,6 +157,13 @@ class VariantI:
                 thesefstrand = [None for f in theseflanks]
             else:
                 thesefstrand = self.dic['flankstrand_vals']
+        else: # single cols
+            theseflanks.append(self.dic['flankseq'])
+            thesecolnames.append(self.dic['flankseq_colname'])
+            if 'flankstrand_val' not in self.dic:
+                thesefstrand.append(None)
+            else:
+                thesefstrand.append(self.dic['flankstrand_val'])
         for ind,thisflank in enumerate(theseflanks):
             toadd = True
             for dbflank,dbflankds in indb:
@@ -188,6 +195,7 @@ class VariantI:
                 thesepstrand = [None for p in theseprobes]
             else:
                 thesepstrand = self.dic['probestrand_vals']
+        #TODO elif single cols, but not 'else' for when no probe sequences at all
         for ind,thisprobe in enumerate(theseprobes):
             toadd = True
             for dbprobe,dbprobeds in indb:
