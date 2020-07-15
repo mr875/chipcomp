@@ -203,6 +203,8 @@ class ChipReader:
         line_dict['pos'] = int(line_arr[self.col_GRCh37_pos]) if self.col_GRCh37_pos else int(line_arr[self.col_GRCh38_pos])
 
 class InfCorEx24v1a1(ChipReader):
+    # test excerpt: /mnt/HPC/processed/mr875/tasks/dsp367/corev1_0_rsEg.csv
+    # location: /mnt/HPC/processed/Metadata/variant_annotation/CoreExomev1.0_annotation.csv
 
     def __init__(self,fname):
         super().__init__(fname)
@@ -222,6 +224,17 @@ class InfCorEx24v1a1(ChipReader):
         self.fill_flankseqs(line_arr,line_dict)
         self.fill_general(line_arr,line_dict) 
         return line_dict
+
+class InfCorEx24v1_1a1(InfCorEx24v1a1):
+    # test excerpt: /mnt/HPC/processed/mr875/tasks/dsp367/corev1_1_rsEg.csv
+    # location: /mnt/HPC/processed/Metadata/variant_annotation/CoreExomev1.1_annotation.csv
+    def __init__(self,fname):
+        super().__init__(fname)
+
+    def load_custom(self):
+        self.flankseqcols=["Forward_Seq","Design_Seq","Top_Seq"]
+        self.flankseqcoln = self.fillcust(self.flankseqcols)
+        
 
 class InfEx24v1a2(ChipReader):
     # test excerpt: /mnt/HPC/processed/mr875/tasks/dsp367/InfiniumExome-24v1-0_A2_Eg.csv
