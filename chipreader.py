@@ -266,5 +266,32 @@ class Dil(ChipReader):
     # original file: /mnt/HPC/processed/Metadata/variant_annotation/DIL_annotation.csv
 
     def __init__(self,fname):
-        super().__init__(fname)
-        self.GRCh38='37'
+        super().__init__(fname,"\t")
+        self.GRCh37='37'
+
+    def load_cols(self):
+        self.col_unique_id = self.colnum('label')
+        self.col_dbSNP_id = self.colnum('dbSNP')
+        self.col_chr = self.colnum('chromosome')
+        self.col_GRCh37_pos = self.colnum('start')
+
+    def load_custom(self):
+        self.col_flank_strand = self.colnum("strand")
+        self.flankseqcols = ["5 prime","observed","3 prime"]
+        self.flankseqcoln = self.fillcust(self.flankseqcols)
+
+    def proc_line(self,line_arr):
+        line_dict = dict()
+        line_dict['flank_seq'] = "".join([line_arr[coln] for coln in self.flankseqcoln])
+        strand = line_arr[self.col_flank_strand].replace('-1','-').replace('1','+')
+        line_dict['flankstrand_val'] = strand
+        line_dict['snp_id'] = None
+        dbsnpid = line_arr[self.col_dbSNP_id]
+        if dbsnpid:
+            line_dict['snp_id'] = dbsnpid
+        line_dict['uid'] = line_arr[self.col_unique_id]
+        line_dict['pos'] = line_arr[self.col_GRCh37_pos]
+        chrom = line_arr[self.col_chr]
+        line_dict['chr'] = chrom.replace('Hs','')
+        return line_dict
+
