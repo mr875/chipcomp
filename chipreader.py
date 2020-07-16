@@ -23,7 +23,8 @@ class ChipReader:
         self.col_chr = None
         self.col_GRCh37_pos = None
         self.col_GRCh38_pos = None
-        self.col_flank_seq = None #if multiple use flankseqcols
+        self.tit_flank_seq = None
+        self.col_flank_seq = None #if multiple use flankseqcols, self.colnum('self.tit_flank_seq')
         self.col_flank_strand = None # if multiple use flankseqcols_strand
         self.flankseqcols = None # col titles of flank seqs when there are multiple
         self.flankseqcoln = None # col number ^ fillcust(self.flankseqcols)
@@ -121,7 +122,6 @@ class ChipReader:
         return self.gencomp(seq1expunge,seq2expunge)
 
     def gencomp(self,seq1,seq2):
-        #todo: add zero string length check here, or minimum sequence length
         seq1valid = False
         seq2valid = False
         if len(seq1) > 25:
@@ -174,7 +174,13 @@ class ChipReader:
         #print(seqnum)  # unique and non faulty seqs to include (their indexes in self.flankseqcoln)
         return list(seqnum)
 
-    def fill_flankseqs(self,line_arr,line_dict):
+    def fill_flankseqs(self,line_arr,line_dict,single=False):
+        if single:
+            line_dict['flankseq'] = line_arr[self.col_flank_seq]
+            line_dict['flankseq_colname'] = self.tit_flank_seq
+            if self.col_flank_strand:
+                line_dict['flankstrand_val'] = line_arr[self.col_flank_strand]
+            return
         seqs_to_use = self.choose_flankseq(line_arr,self.flankseqcoln)
         cols_used = [self.flankseqcols[i] for i in seqs_to_use]
         coln_used = [self.flankseqcoln[i] for i in seqs_to_use]
@@ -195,6 +201,10 @@ class ChipReader:
 
     def fill_general(self,line_arr,line_dict):
         snp_id = self.getrs(line_arr[self.col_unique_id])
+        if self.col_dbSNP_id:
+            possible = line_arr[self.col_dbSNP_id]
+            if possible.startswith('rs'):
+                snp_id = possible
         line_dict['snp_id'] = snp_id
         main_id = line_arr[self.col_unique_id]
         if main_id != snp_id:
@@ -308,4 +318,39 @@ class Dil(ChipReader):
         chrom = line_arr[self.col_chr]
         line_dict['chr'] = chrom.replace('Hs','')
         return line_dict
+
+class AxiUKBBAffy2_1(ChipReader):
+    # example excerpt: /mnt/HPC/processed/mr875/tasks/dsp367/AxiUKBBAffy2_1_38_Eg.csv
+    # original file: /mnt/HPC/processed/mr875/tasks/dsp367/Axiom_UKBBv2_1.na36.r1.a1.annot.csv
+
+    
+    def __init__(self,fname):
+        super().__init__(fname)
+        self.GRCh38='38'
+
+    def load_cols(self):
+        while self.header[0].startswith('#'):
+            self.header = next(self.it)
+        self.col_unique_id = self.colnum('Affy SNP ID')
+        self.col_dbSNP_id = self.colnum('dbSNP RS ID')
+        self.extcol_dbSNP_id = self.colnum('Extended RSID')
+        self.col_chr = self.colnum('Chromosome')
+        self.col_GRCh38_pos = self.colnum('Physical Position')
+
+    def load_custom(self):
+        self.col_flank_strand = self.colnum('Strand')
+        self.tit_flank_seq = 'Flank'
+        self.col_flank_seq = self.colnum(self.tit_flank_seq)
+
+    def proc_line(self,line_arr):
+        line_dict = dict()
+        firstdbsnp = line_arr[self.col_dbSNP_id]
+        secdbsnp = line_arr[self.extcol_dbSNP_id]
+        self.fill_flankseqs(line_arr,line_dict,True)
+        self.fill_general(line_arr,line_dict)
+        if not firstdbsnp.startswith('rs'): # null values look like '---'
+            if secdbsnp.startswith('rs'):
+                line_dict['snp_id'] = secdbsnp
+        return line_dict
+
 
