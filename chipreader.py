@@ -219,6 +219,7 @@ class InfCorEx24v1a1(ChipReader):
     def __init__(self,fname):
         super().__init__(fname)
         self.GRCh37='37'
+        self.datasource = "170"
 
     def load_cols(self):
         self.col_unique_id = self.colnum('SNP_Name') 
@@ -240,6 +241,7 @@ class InfCorEx24v1_1a1(InfCorEx24v1a1):
     # location: /mnt/HPC/processed/Metadata/variant_annotation/CoreExomev1.1_annotation.csv
     def __init__(self,fname):
         super().__init__(fname)
+        self.datasource = "171"
 
     def load_custom(self):
         self.flankseqcols=["Forward_Seq","Design_Seq","Top_Seq"]
@@ -252,6 +254,7 @@ class InfEx24v1a2(ChipReader):
     def __init__(self,fname):
         super().__init__(fname)
         self.GRCh38='38'
+        self.datasource="233"
 
     def load_cols(self):
         self.col_unique_id = self.colnum('Name')
@@ -291,6 +294,7 @@ class Dil(ChipReader):
     def __init__(self,fname):
         super().__init__(fname,"\t")
         self.GRCh37='37'
+        self.datasource="114"
 
     def load_cols(self):
         self.col_unique_id = self.colnum('label')
@@ -327,6 +331,7 @@ class AxiUKBBAffy2_1(ChipReader):
     def __init__(self,fname):
         super().__init__(fname)
         self.GRCh38='38'
+        self.datasource="231"
 
     def load_cols(self):
         while self.header[0].startswith('#'):

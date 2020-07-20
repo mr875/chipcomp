@@ -11,9 +11,9 @@ readers = [InfCorEx24v1a1('/mnt/HPC/processed/mr875/tasks/dsp367/corev1_0_rsEg.c
 
 for reader in readers:
 #    print(reader.header)
-    if not type(reader).__name__ == "AxiUKBBAffy2_1":
-        continue
-    for l in reader.linebyline():
+#    if not type(reader).__name__ == "AxiUKBBAffy2_1":
+#        continue
+    for l in reader.linebyline(3):
         line_dict = reader.proc_line(l)
         print(line_dict)
     print()
