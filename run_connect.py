@@ -10,11 +10,18 @@ def readin(chip,reader):
     new_ds = reader.datasource
     for line in reader.linebyline():
         dic = reader.proc_line(line)
-        variant = VariantI(curs,dic,new_ds,build)
-        variant.log_flank()
-        variant.log_probe()
-        variant.log_coord()
-        chip.commit()
+        try:
+            variant = VariantI(curs,dic,new_ds,build)
+            variant.log_flank()
+            variant.log_probe()
+            variant.log_coord()
+        except Exception as e:
+            print("error with %s/%s" % (dic['uid'],dic['snp_id']))
+            chip.rollback()
+            raise
+        else:
+            chip.commit()
+        #chip.commit()
 
 readers = [InfCorEx24v1a1('/mnt/HPC/processed/mr875/tasks/dsp367/corev1_0_rsEg.csv'),
         InfEx24v1a2('/mnt/HPC/processed/mr875/tasks/dsp367/InfiniumExome-24v1-0_A2_Eg.csv'),

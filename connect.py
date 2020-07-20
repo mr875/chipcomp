@@ -40,6 +40,9 @@ class DBConnect:
     def commit(self):
         self.dbs.commit()
 
+    def rollback(self):
+        self.dbs.rollback()
+
     def close(self):
         self.resetCursors() 
         self.dbs.close()
