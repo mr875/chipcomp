@@ -37,7 +37,7 @@ CREATE TABLE positions(
 	datasource varchar(40) NOT NULL,
 	match_count tinyint unsigned DEFAULT 1,
 	chosen boolean default false,
-	PRIMARY KEY(id,chr,pos)
+	PRIMARY KEY(id,chr,pos,build,datasource)
 );
 DROP TABLE IF EXISTS probes;
 CREATE TABLE probes(
