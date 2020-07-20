@@ -39,7 +39,7 @@ class VariantI:
     def add_altid(self,prim_id,sec_id,new_ds):
         self.curs.execute("SELECT EXISTS(SELECT * FROM alt_ids WHERE id = %s AND alt_id = %s AND datasource = %s)",(prim_id,sec_id,new_ds))
         if not self.curs.fetchone()[0]:
-            curs.execute("INSERT INTO alt_ids (id, alt_id, datasource) VALUES (%s, %s, %s)",(prim_id,sec_id,new_ds))
+            self.curs.execute("INSERT INTO alt_ids (id, alt_id, datasource) VALUES (%s, %s, %s)",(prim_id,sec_id,new_ds))
 
     def snpid_swapin(self,uid_to_swapout,db_snp,old_ds,new_ds,this_altid=None):
         #swap dbsnp id into consensus table, put initial id into alt_ids
