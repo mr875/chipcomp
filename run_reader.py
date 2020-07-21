@@ -7,11 +7,12 @@ from chipreader import *
 readers = [InfCorEx24v1a1('/mnt/HPC/processed/mr875/tasks/dsp367/corev1_0_rsEg.csv'),
     InfEx24v1a2('/mnt/HPC/processed/mr875/tasks/dsp367/InfiniumExome-24v1-0_A2_Eg.csv'),
     Dil('/mnt/HPC/processed/mr875/tasks/dsp367/DIL_annotation_Eg.csv'),
-    AxiUKBBAffy2_1('/mnt/HPC/processed/mr875/tasks/dsp367/AxiUKBBAffy2_1_38_Eg.csv')]
+    AxiUKBBAffy2_1('/mnt/HPC/processed/mr875/tasks/dsp367/AxiUKBBAffy2_1_38_Eg.csv'),
+    InfImmun24v2('/mnt/HPC/processed/mr875/tasks/dsp367/infimmun_Eg.csv')]
 
 for reader in readers:
 #    print(reader.header)
-#    if not type(reader).__name__ == "AxiUKBBAffy2_1":
+#    if not type(reader).__name__ == "InfImmun24v2":
 #        continue
     for l in reader.linebyline(3):
         line_dict = reader.proc_line(l)
