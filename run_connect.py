@@ -24,7 +24,12 @@ def readin(chip,reader):
             now = int(time.time() - start)
             logging.info("approximately %.2f%% parsed after %s seconds, %s variants" % ((variant_count/line_count*100),now,variant_count))
             logline += fvper
-        dic = reader.proc_line(line)
+        try:
+            dic = reader.proc_line(line)
+        except IndexError:
+            statement = "IndexError when trying to process line (reader.proc_line).\nProbably this line doesn't have all expected columns:\n"+ "--".join(line) + "\nskipping this line"
+            logging.warning(statement)
+            continue
         try:
             variant = VariantI(curs,dic,new_ds,build)
             variant.log_flank()
@@ -47,7 +52,8 @@ def readin(chip,reader):
 #           AxiUKBBAffy2_1('/mnt/HPC/processed/mr875/tasks/dsp367/AxiUKBBAffy2_1_38_Eg.csv')]
 
 #readers = [InfCorEx24v1a1('/mnt/HPC/processed/Metadata/variant_annotation/CoreExomev1.0_annotation.csv')]
-readers = [InfEx24v1a2('/mnt/HPC/processed/Metadata/variant_annotation_grch38/InfiniumExome-24v1-0_A2.csv')]
+#readers = [InfEx24v1a2('/mnt/HPC/processed/Metadata/variant_annotation_grch38/InfiniumExome-24v1-0_A2.csv')]
+readers = [InfEx24v1a2('/mnt/HPC/processed/mr875/tasks/dsp367/InfiniumExome-24v1-0_A2_Eg.csv')]
 #readers = [Dil('/mnt/HPC/processed/Metadata/variant_annotation/DIL_annotation.csv')]
 #readers = [InfCorEx24v1_1a1('/mnt/HPC/processed/Metadata/variant_annotation/CoreExomev1.1_annotation.csv')]
 #readers = [AxiUKBBAffy2_1('/mnt/HPC/processed/mr875/tasks/dsp367/Axiom_UKBBv2_1.na36.r1.a1.annot.csv')]
