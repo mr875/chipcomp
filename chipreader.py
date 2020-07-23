@@ -364,4 +364,31 @@ class AxiUKBBAffy2_1(ChipReader):
                 line_dict['snp_id'] = secdbsnp
         return line_dict
 
+class AxiUKBB_WCSG(ChipReader):
+    # example excerpt: /mnt/HPC/processed/mr875/tasks/dsp367/AxiUKBB_WCSG_Eg.csv
+    # original file: /mnt/HPC/processed/Metadata/variant_annotation/Axiom_UKB_WCSG.na35.annot-2015.csv
+
+    def __init__(self,fname):
+        super().__init__(fname)
+        self.GRC37='37'
+        self.datasource="999" #temporary
+
+    def load_cols(self):
+        while self.header[0].startswith('#'):
+            self.header = next(self.it)
+        self.col_unique_id = self.colnum('Affy SNP ID')
+        self.col_dbSNP_id = self.colnum('dbSNP RS ID')
+        self.col_chr = self.colnum('Chromosome')
+        self.col_GRCh38_pos = self.colnum('Physical Position')
+
+    def load_custom(self):
+        self.col_flank_strand = self.colnum('Strand')
+        self.tit_flank_seq = 'Flank'
+        self.col_flank_seq = self.colnum(self.tit_flank_seq)
+
+    def proc_line(self,line_arr):
+        line_dict = dict()
+        self.fill_flankseqs(line_arr,line_dict,True)
+        self.fill_general(line_arr,line_dict)
+        return line_dict
 
