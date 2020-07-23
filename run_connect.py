@@ -36,6 +36,10 @@ def readin(chip,reader):
             statement = "ValueError thrown (reader.proc_line).\nprobably from int conversion of ukbb style '---' reference positions. Last variation parsed was {}. Error: {}\nskipping this variant".format(prev_id,ve)
             logging.warning(statement)
             continue
+        except:
+            logging.error('uknown error at reader.proc_line(line)')
+            ch.close()
+            raise
         else:
             prev_id = dic['uid']
         try:
@@ -48,10 +52,11 @@ def readin(chip,reader):
             logging.warning(mess)
             chip.rollback()
         except Exception as e:
-            mess = "error with {}/{}".format(dic['uid'],dic['snp_id'])
+            mess = "unknown error with {}/{}".format(dic['uid'],dic['snp_id'])
             logging.error(mess)
             print(mess)
             chip.rollback()
+            ch.close()
             raise
         else:
             chip.commit()
@@ -59,12 +64,12 @@ def readin(chip,reader):
     now = int(time.time() - start)
     logging.info('Finished: %s seconds passed, %s variants' % (now,(variant_count-1)))
 
-#readers = [InfCorEx24v1a1('/mnt/HPC/processed/mr875/tasks/dsp367/corev1_0_rsEg.csv'),
-#        InfEx24v1a2('/mnt/HPC/processed/mr875/tasks/dsp367/InfiniumExome-24v1-0_A2_Eg.csv'),
-#        Dil('/mnt/HPC/processed/mr875/tasks/dsp367/DIL_annotation_Eg.csv'),
-#       InfCorEx24v1_1a1('/mnt/HPC/processed/mr875/tasks/dsp367/corev1_1_rsEg.csv'),
-#           AxiUKBBAffy2_1('/mnt/HPC/processed/mr875/tasks/dsp367/AxiUKBBAffy2_1_38_Eg.csv'),
-        #InfImmun24v2('/mnt/HPC/processed/mr875/tasks/dsp367/infimmun_Eg.csv')]
+readers = [InfCorEx24v1a1('/mnt/HPC/processed/mr875/tasks/dsp367/corev1_0_rsEg.csv'),
+        InfEx24v1a2('/mnt/HPC/processed/mr875/tasks/dsp367/InfiniumExome-24v1-0_A2_Eg.csv'),
+        Dil('/mnt/HPC/processed/mr875/tasks/dsp367/DIL_annotation_Eg.csv'),
+       InfCorEx24v1_1a1('/mnt/HPC/processed/mr875/tasks/dsp367/corev1_1_rsEg.csv'),
+           AxiUKBBAffy2_1('/mnt/HPC/processed/mr875/tasks/dsp367/AxiUKBBAffy2_1_38_Eg.csv'),
+        InfImmun24v2('/mnt/HPC/processed/mr875/tasks/dsp367/infimmun_Eg.csv')]
 # debug:
 #readers = [AxiUKBBAffy2_1('/mnt/HPC/processed/mr875/tasks/dsp367/AxiUKBBAffy2_1_38_Eg.csv')]
 
@@ -73,7 +78,8 @@ def readin(chip,reader):
 #readers = [InfEx24v1a2('/mnt/HPC/processed/Metadata/variant_annotation_grch38/InfiniumExome-24v1-0_A2.csv')]
 #readers = [InfCorEx24v1_1a1('/mnt/HPC/processed/Metadata/variant_annotation/CoreExomev1.1_annotation.csv')]
 
-readers = [AxiUKBBAffy2_1('/mnt/HPC/processed/mr875/tasks/dsp367/Axiom_UKBBv2_1.na36.r1.a1.annot.csv')]
+#readers = [AxiUKBBAffy2_1('/mnt/HPC/processed/mr875/tasks/dsp367/Axiom_UKBBv2_1.na36.r1.a1.annot.csv')]
+
 #readers = [Dil('/mnt/HPC/processed/Metadata/variant_annotation/DIL_annotation.csv')]
 #readers = [InfImmun24v2('/mnt/HPC/processed/Metadata/variant_annotation/InfiniumImmunoArray_annotation.csv')]
 
