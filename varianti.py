@@ -74,7 +74,7 @@ class VariantI:
                 diff_uid = self.altid_exists(self.secondary_id)
                 if diff_uid: # if snp exists in consensus under different id
                     uid_to_swapout = diff_uid[0]
-                    old_ds = id_exists(uid_to_swapout)[0]
+                    old_ds = self.id_exists(uid_to_swapout)[0]
                     #swap dbsnp id into consensus table, put initial value and ds into alt_ids AND add this datasource as new alt_id
                     self.snpid_swapin(uid_to_swapout,self.dbsnpid,old_ds,new_ds=self.datasource,this_altid=self.secondary_id)
                 else: # alternative not found anywhere
