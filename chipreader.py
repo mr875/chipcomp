@@ -329,9 +329,11 @@ class Dil(ChipReader):
         line_dict['flankstrand_val'] = strand
         line_dict['snp_id'] = None
         dbsnpid = line_arr[self.col_dbSNP_id]
+        main_id = line_arr[self.col_unique_id]
         if dbsnpid:
             line_dict['snp_id'] = dbsnpid
-        line_dict['uid'] = line_arr[self.col_unique_id]
+        if dbsnpid != main_id:
+            line_dict['uid'] = main_id
         line_dict['pos'] = int(line_arr[self.col_GRCh37_pos])
         chrom = line_arr[self.col_chr]
         line_dict['chr'] = chrom.replace('Hs','')
