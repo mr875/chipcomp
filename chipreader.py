@@ -328,7 +328,7 @@ class Dil(ChipReader):
         strand = line_arr[self.col_flank_strand].replace('-1','-').replace('1','+')
         line_dict['flankstrand_val'] = strand
         line_dict['snp_id'] = None
-        dbsnpid = line_arr[self.col_dbSNP_id]
+        dbsnpid = line_arr[self.col_dbSNP_id] # empty column delivers None type
         main_id = line_arr[self.col_unique_id]
         if dbsnpid:
             line_dict['snp_id'] = dbsnpid
