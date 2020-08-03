@@ -292,7 +292,7 @@ class InfEx24v1a2(ChipReader):
         self.fill_probeseqs(line_arr,line_dict)
         self.fill_general(line_arr,line_dict)
         return line_dict
-        
+
 class InfImmun24v2grc38(InfEx24v1a2):
     # test excerpt: /mnt/HPC/processed/mr875/tasks/dsp367/infimmung38_Eg.csv
     # location: /mnt/HPC/processed/Metadata/variant_annotation_grch38/InfiniumImmunoArray-24v2-0_A2.csv
@@ -301,6 +301,14 @@ class InfImmun24v2grc38(InfEx24v1a2):
         self.GRCh38='38'
         self.datasource="234"
     
+class InfCorEx24v1_1grc38(InfEx24v1a2):
+    # test excerpt: /mnt/HPC/processed/mr875/tasks/dsp367/infincorex38_Eg.csv
+    # location: /mnt/HPC/processed/Metadata/variant_annotation_grch38/InfiniumCoreExome-24v1-1_A2.csv
+    def __init__(self,fname):
+        super().__init__(fname)
+        self.GRCh38='38'
+        self.datasource="232"
+
 class Dil(ChipReader):
     # example excerpt: /mnt/HPC/processed/mr875/tasks/dsp367/DIL_annotation_Eg.csv 
     # original file: /mnt/HPC/processed/Metadata/variant_annotation/DIL_annotation.csv

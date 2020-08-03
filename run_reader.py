@@ -10,13 +10,14 @@ readers = [InfCorEx24v1a1('/mnt/HPC/processed/mr875/tasks/dsp367/corev1_0_rsEg.c
     AxiUKBBAffy2_1('/mnt/HPC/processed/mr875/tasks/dsp367/AxiUKBBAffy2_1_38_Eg.csv'),
     InfImmun24v2('/mnt/HPC/processed/mr875/tasks/dsp367/infimmun_Eg.csv'),
     AxiUKBB_WCSG('/mnt/HPC/processed/mr875/tasks/dsp367/AxiUKBB_WCSG_Eg.csv'),
-    InfImmun24v2grc38('/mnt/HPC/processed/mr875/tasks/dsp367/infimmung38_Eg.csv')]
+    InfImmun24v2grc38('/mnt/HPC/processed/mr875/tasks/dsp367/infimmung38_Eg.csv'),
+    InfCorEx24v1_1grc38('/mnt/HPC/processed/mr875/tasks/dsp367/infincorex38_Eg.csv')]
 
 for reader in readers:
 #    print(reader.header)
-    if not type(reader).__name__ == "Dil":
-        continue
-    for l in reader.linebyline():
+#    if not type(reader).__name__ == "InfCorEx24v1_1grc38":
+#        continue
+    for l in reader.linebyline(3):
         line_dict = reader.proc_line(l)
         print(line_dict)
     print()
