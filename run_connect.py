@@ -54,11 +54,15 @@ def readin(chip,reader,offset=0):
             variant.log_probe()
             variant.log_coord()
         except mysql.connector.errors.DataError as de:
-            mess = "error thrown, suspected long chromosome name ({}). skipping {}/{}: {}".format(dic['chr'],dic['uid'],dic['snp_id'],de)
+            mess = "sql DataError thrown, suspected long chromosome name ({}). skipping {}: {}".format(dic['chr'],prev_id,de)
+            logging.warning(mess)
+            chip.rollback()
+        except mysql.connector.errors.IntegrityError as ine:
+            mess = "sql IntegrityError thrown.\ncould be from duplicate entry of primary key into flank table.\nskipping {}:{}".format(prev_id,ine)
             logging.warning(mess)
             chip.rollback()
         except Exception as e:
-            mess = "unknown error with {}/{}".format(dic['uid'],dic['snp_id'])
+            mess = "unknown error with {}".format(prev_id)
             logging.error(mess)
             print(mess)
             chip.rollback()
@@ -76,7 +80,7 @@ def readin(chip,reader,offset=0):
 #           AxiUKBBAffy2_1('/mnt/HPC/processed/mr875/tasks/dsp367/AxiUKBBAffy2_1_38_Eg.csv'),
 #        InfImmun24v2('/mnt/HPC/processed/mr875/tasks/dsp367/infimmun_Eg.csv'),
 #        AxiUKBB_WCSG('/mnt/HPC/processed/mr875/tasks/dsp367/AxiUKBB_WCSG_Eg.csv'),
-#        InfImmun24v2grc38('/mnt/HPC/processed/mr875/tasks/dsp367/infimmung38_Eg.csv')] # new
+#        InfImmun24v2grc38('/mnt/HPC/processed/mr875/tasks/dsp367/infimmung38_Eg.csv')] 
 # debug:
 #readers = [AxiUKBBAffy2_1('/mnt/HPC/processed/mr875/tasks/dsp367/AxiUKBBAffy2_1_38_Eg.csv')]
 
@@ -85,17 +89,18 @@ def readin(chip,reader,offset=0):
 #        InfEx24v1a2('/mnt/HPC/processed/Metadata/variant_annotation_grch38/InfiniumExome-24v1-0_A2.csv'),
 #        InfCorEx24v1_1a1('/mnt/HPC/processed/Metadata/variant_annotation/CoreExomev1.1_annotation.csv')]
 #readers = [AxiUKBBAffy2_1('/mnt/HPC/processed/mr875/tasks/dsp367/Axiom_UKBBv2_1.na36.r1.a1.annot.csv')]
+#readers = [AxiUKBB_WCSG('/mnt/HPC/processed/Metadata/variant_annotation/Axiom_UKB_WCSG.na35.annot-2015.csv')]
+#readers = [InfImmun24v2('/mnt/HPC/processed/Metadata/variant_annotation/InfiniumImmunoArray_annotation.csv'),
+#            InfImmun24v2grc38('/mnt/HPC/processed/Metadata/variant_annotation_grch38/InfiniumImmunoArray-24v2-0_A2.csv')]
 
-readers = [AxiUKBB_WCSG('/mnt/HPC/processed/Metadata/variant_annotation/Axiom_UKB_WCSG.na35.annot-2015.csv')]
 #readers = [Dil('/mnt/HPC/processed/Metadata/variant_annotation/DIL_annotation.csv')]
-#readers = [InfImmun24v2('/mnt/HPC/processed/Metadata/variant_annotation/InfiniumImmunoArray_annotation.csv')]
 
 ch = DBConnect("cc2")
 #ch = DBConnect("chip_comp")
 logfile = datetime.datetime.now().strftime("%a_%d%b_%I%p.log")
 logging.basicConfig(filename=logfile, level=logging.INFO)
-offsetclass = "AxiUKBB_WCSG"  #pick a source class from which you don't want to parse from the beginning
-offsetvariant = 7900 # variant 1 = the first line under the header. so if offsetvariant = 3 then the 3rd variant will be parsed
+offsetclass = "" # "AxiUKBB_WCSG"  #pick a source class from which you don't want to parse from the beginning
+offsetvariant = 249200 # variant 1 = the first line under the header. so if offsetvariant = 3 then the 3rd variant will be parsed
 for source in readers:
     if type(source).__name__ == offsetclass:
         readin(ch,source,offsetvariant)
