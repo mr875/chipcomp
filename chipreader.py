@@ -397,7 +397,7 @@ class AxiUKBB_WCSG(ChipReader):
         self.col_unique_id = self.colnum('Affy SNP ID')
         self.col_dbSNP_id = self.colnum('dbSNP RS ID')
         self.col_chr = self.colnum('Chromosome')
-        self.col_GRCh38_pos = self.colnum('Physical Position')
+        self.col_GRCh37_pos = self.colnum('Physical Position')
 
     def load_custom(self):
         self.col_flank_strand = self.colnum('Strand')
