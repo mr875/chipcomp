@@ -27,8 +27,12 @@ class DBConnect:
         self.user=config['user']['name']
         self.pw=config['user']['pw']
 
-    def getCursor(self):
-        new_curs = self.dbs.cursor()
+    def getCursor(self,dic=False):
+        if dic:
+            new_curs = self.dbs.cursor(dictionary=True)
+        else:
+            new_curs = self.dbs.cursor()
+
         self.cursors.append(new_curs)
         return new_curs
 
