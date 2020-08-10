@@ -226,3 +226,48 @@ class VariantI:
         if posadd:
             vals = (self.main_id,chrm,pos,self.build,self.datasource)
             self.curs.execute("INSERT INTO positions (id,chr,pos,build,datasource) VALUES (%s,%s,%s,%s,%s)",vals)
+
+class VariantM(VariantI):
+
+    def __init__(self,curs,main_id,pos,build,ds):
+        self.main_id = main_id
+        self.datasource = ds
+        self.build = build
+        self.curs = curs
+        self.pos = pos
+
+    def snpid_swapin(self,alt_id,alt_ds):
+        opp_build = '38'
+        q = "SELECT pos FROM positions WHERE build = %s AND id = %s"
+        if self.build == '38':
+            opp_build = '37'
+        self.curs.execute(q,(opp_build,alt_id))
+        opp_alt = self.curs.fetchall()
+        self.curs.execute(q,(opp_build,self.main_id))
+        opp_main = self.curs.fetchall()
+        if len(opp_alt):
+            if len(opp_main):
+                opp_alt_pos = opp_alt[0][0]
+                opp_main_pos = opp_main[0][0]
+                if opp_alt_pos == opp_main_pos:# main id and alt id already in opp build and positions match so remove alt id, insert/ignore into alt_ids for datasource tracking?
+                    q = "DELETE FROM positions WHERE build = %s AND id = %s AND pos = %s"
+                    vals = (opp_build,alt_id,opp_alt_pos)
+                    #self.curs.execute(q,vals)
+                    print("main id and alt id already in opp build and positions match so remove alt id ",alt_id)
+                else:
+                    pass # main id and alt id already in opp build with different positions logged so switch in the main id so that there are 2 of the same ids but at different positions, alt datasource will remain
+            else: # alt id in opposite build but main id not, so switch the main id in 
+                pass
+        else:
+            pass # alt id not in opp build, no change necessary
+        print("in build %s alt id present: %s main id present: %s" % (opp_build,str(len(opp_alt)),str(len(opp_main)))) 
+#self.curs.execute("UPDATE consensus SET id = %s, uid_datasource = %s where id = %s",(db_snp,new_ds,uid_to_swapout))
+#TODO: delete alt_id from consensus
+#        self.curs.execute("UPDATE alt_ids SET id = %s where id = %s",(self.main_id,alt_id))
+#        self.curs.execute("UPDATE flank SET id = %s where id = %s",(self.main_id,alt_id))
+#self.curs.execute("UPDATE positions SET id = %s where id = %s",(self.main_id,alt_id))
+#        self.curs.execute("UPDATE probes SET id = %s where id = %s",(self.main_id,alt_id))
+#        self.curs.execute("UPDATE snp_present SET id = %s where id = %s",(self.main_id,alt_id))
+#        self.curs.execute("UPDATE match_count SET id = %s where id = %s",(self.main_id,alt_id))
+#        self.curs.execute("INSERT INTO alt_ids (id, alt_id, datasource) VALUES (%s, %s, %s)",(self.main_id,alt_id,alt_ds))
+        #TODO: handle opposite build instance

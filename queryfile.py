@@ -1,4 +1,5 @@
 from connect import DBConnect
+from varianti import VariantM
 import sys
 from collections import Counter
 
@@ -8,7 +9,7 @@ class QueryFile:
         self.bfile = bfile
         self.qry = qry
         self.db = db
-        self._makeF()   #put back for file generation
+#        self._makeF()   #put back for file generation
 
     def _makeF(self):
         try:
@@ -61,25 +62,35 @@ def choose(posdups):
     else:
         return leastds[0]
 
-def mergeids(chose,dups):
+def mergeids(chose,dups,curs):
     print()
-    print("need to merge these ",dups)
-    print("with ",chose)
+#    print("need to merge these ",dups)
+#    print("with ",chose)
+    main = VariantM(curs,chose['id'],chose['pos'],chose['build'],chose['datasource'])
+    for dupd in dups:
+        print("merging alt %s with main %s" % (dupd['id'],chose['id']))
+#        main.snpid_swapin(dupd['id'],dupd['datasource'])
 
 def main():
 
-    qsamepos = "select pos,count(id) from positions where build = '37' group by pos having count(id) > 1 and pos <> 0 order by count(id) desc limit 15" # REMOVE limit after testing
-#    qsamepos = ("select count(*) from positions",())
+    qsamepos = "select pos,count(id) from positions where build = '37' group by pos having count(id) > 1 and pos <> 0 order by count(id) desc limit 2" # REMOVE limit after testing
     fname = 'samepos.txt'
     qf = QueryFile(fname,qsamepos)
     conn = DBConnect('chip_comp')
     curs = conn.getCursor(dic=True)
-    for line in qf.read():
-        posdups = getvars(line,curs)
-        whichind = choose(posdups)
-        whichone = posdups[whichind]
-        whichdups = [d for i,d in enumerate(posdups) if i != whichind]
-        mergeids(whichone,whichdups)
+    cursm = conn.getCursor()
+    try:
+        for line in qf.read():
+            posdups = getvars(line,curs)
+            whichind = choose(posdups)
+            whichone = posdups[whichind]
+            whichdups = [d for i,d in enumerate(posdups) if i != whichind]
+            mergeids(whichone,whichdups,cursm)
+    except Exception as e:
+        print("error at merging step",sys.exc_info()[0], e)
+    finally:
+        conn.close()
+
 
 if __name__ == '__main__':
     main()

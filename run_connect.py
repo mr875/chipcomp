@@ -94,7 +94,7 @@ def readin(chip,reader,offset=0):
 #        InfImmun24v2('/mnt/HPC/processed/Metadata/variant_annotation/InfiniumImmunoArray_annotation.csv'),
 #        InfImmun24v2grc38('/mnt/HPC/processed/Metadata/variant_annotation_grch38/InfiniumImmunoArray-24v2-0_A2.csv')]
 
-#readers = [InfCorEx24v1_1grc38('/mnt/HPC/processed/Metadata/variant_annotation_grch38/InfiniumCoreExome-24v1-1_A2.csv')]
+readers = [InfCorEx24v1_1grc38('/mnt/HPC/processed/Metadata/variant_annotation_grch38/InfiniumCoreExome-24v1-1_A2.csv')]
 #readers = [Dil('/mnt/HPC/processed/Metadata/variant_annotation/DIL_annotation.csv')]
 
 ch = DBConnect("cc3")
