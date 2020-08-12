@@ -249,15 +249,16 @@ class VariantM(VariantI):
         self.curs.execute(q,(opp_build,self.main_id))
         opp_main = self.curs.fetchall()
         print("in opposite build %s alt id present: %s main id present: %s" % (opp_build,str(len(opp_alt)),str(len(opp_main)))) 
+        #going to merge multiple ids that have the same position as self.main_id, but check opposite build first
         if len(opp_alt):
-            if len(opp_alt) > 1:
+            if len(opp_alt) > 1: #alt id shouldn't be appearing more than once. raise error for logging
                 raise NotMerged("swapping alt id %s for main id %s in build %s but detected multiple positions for alt id in opposite build %s" % (alt_id,self.main_id,self.build,opp_build)) 
-            if len(opp_main):
-                if len(opp_main) > 1:
+            if len(opp_main): # both main id and alt id have entries in opposite build
+                if len(opp_main) > 1: # main id shouldn't be appearing more than once. raise error for logging
                     raise NotMerged("swapping alt id %s for main id %s in build %s but detected multiple positions for main id in opposite build %s" % (alt_id,self.main_id,self.build,opp_build))
                 opp_alt_pos = opp_alt[0][0]
                 opp_main_pos = opp_main[0][0]
-                if opp_alt_pos == opp_main_pos:# main id and alt id already in opp build and positions match so remove alt id
+                if opp_alt_pos == opp_main_pos:# positions match so we can remove alt id from opposite build because main id exists
                     q = "DELETE FROM positions WHERE build = %s AND id = %s AND pos = %s"
                     vals = (opp_build,alt_id,opp_alt_pos)
                     #self.curs.execute(q,vals)
@@ -268,7 +269,7 @@ class VariantM(VariantI):
                 q = "UPDATE positions SET id = %s WHERE build = %s AND id = %s AND pos = %s"
                 vals = (self.main_id,opp_build,alt_id,opp_alt[0][0])
                 print("alt id %s in opposite build %s but main id %s not, so switch the main id in (pos (%s))" % (alt_id,opp_build,self.main_id,opp_alt[0][0]))
-        else:
+        else: # alt id not in opposite build, no change necesary
             print("alt id not in opp build, no change necessary")
 #self.curs.execute("UPDATE consensus SET id = %s, uid_datasource = %s where id = %s",(db_snp,new_ds,uid_to_swapout))
 #TODO: delete alt_id from consensus

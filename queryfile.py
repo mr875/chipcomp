@@ -35,11 +35,11 @@ class QueryFile:
             for line in f:
                 yield line
 
-def getvars(line,curs):
+def getvars(line,curs,build):
     pos,tot = line.split("\t")
 #    pos = int(pos)
-    q = 'SELECT * FROM positions WHERE pos = %s'
-    curs.execute(q,(pos,))
+    q = 'SELECT * FROM positions WHERE pos = %s AND build = %s'
+    curs.execute(q,(pos,build))
     allpos = curs.fetchall()
     return allpos
 
@@ -65,19 +65,16 @@ def choose(posdups):
 
 def mergeids(chose,dups,curs):
     print()
-#    print("need to merge these ",dups)
-#    print("with ",chose)
     main = VariantM(curs,chose['id'],chose['pos'],chose['build'],chose['datasource'])
     for dupd in dups:
         print("merging alt %s with main %s" % (dupd['id'],chose['id']))
         try:
             main.snpid_swapin(dupd['id'],dupd['datasource'])
         except NotMerged as nm:
-            print("not-merged error: ",nm)
+            print("not-merged error: ",nm) # for logging
 
 def main():
 
-#    qsamepos = "select pos,count(id) from positions where build = '37' group by pos having count(id) > 1 and pos <> 0 order by count(id) desc limit 2" # REMOVE limit after testing
     build = '37'
     vals = (build,build)
     qsamepos = ("select pos,count(id) from positions where build = %s group by pos having count(id) > 1 and pos <> 0 and pos not in "
@@ -96,7 +93,7 @@ def main():
                 "and  "
                 "p1.build = %s "
             ") "
-            "order by count(id) desc limit 2" # REMOVE LIMIT
+            "order by count(id) desc limit 3" # REMOVE LIMIT
             )
     fname = 'samepos.txt'
     qf = QueryFile(fname,qsamepos,vals)
@@ -105,7 +102,7 @@ def main():
     cursm = conn.getCursor()
     try:
         for line in qf.read():
-            posdups = getvars(line,curs)
+            posdups = getvars(line,curs,build)
             whichind = choose(posdups)
             whichone = posdups[whichind]
             whichdups = [d for i,d in enumerate(posdups) if i != whichind]
