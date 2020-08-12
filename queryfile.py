@@ -5,9 +5,10 @@ from collections import Counter
 
 class QueryFile:
 
-    def __init__(self,bfile,qry,db="chip_comp"):
+    def __init__(self,bfile,qry,vals=(),db="chip_comp"):
         self.bfile = bfile
         self.qry = qry
+        self.vals = vals
         self.db = db
 #        self._makeF()   #put back for file generation
 
@@ -16,7 +17,7 @@ class QueryFile:
             f = open(self.bfile,"w")
             conn = DBConnect(self.db)
             curs = conn.getCursor()
-            curs.execute(self.qry)
+            curs.execute(self.qry,self.vals)
             for row in curs:
                 row = [str(i) for i in row]
                 f.write("\t".join(row))
@@ -69,13 +70,36 @@ def mergeids(chose,dups,curs):
     main = VariantM(curs,chose['id'],chose['pos'],chose['build'],chose['datasource'])
     for dupd in dups:
         print("merging alt %s with main %s" % (dupd['id'],chose['id']))
-#        main.snpid_swapin(dupd['id'],dupd['datasource'])
+        try:
+            main.snpid_swapin(dupd['id'],dupd['datasource'])
+        except NotMerged as nm:
+            print("not-merged error: ",nm)
 
 def main():
 
-    qsamepos = "select pos,count(id) from positions where build = '37' group by pos having count(id) > 1 and pos <> 0 order by count(id) desc limit 2" # REMOVE limit after testing
+#    qsamepos = "select pos,count(id) from positions where build = '37' group by pos having count(id) > 1 and pos <> 0 order by count(id) desc limit 2" # REMOVE limit after testing
+    build = '37'
+    vals = (build,build)
+    qsamepos = ("select pos,count(id) from positions where build = %s group by pos having count(id) > 1 and pos <> 0 and pos not in "
+            "( "
+                "select p1.pos from positions p1, positions p2  "
+                "where "
+                "p1.build = p2.build "
+                "and "
+                "p1.id = p2.id "
+                "and "
+                "p1.pos <> p2.pos "
+                "and "
+                "p1.pos <> 0 "
+                "and "
+                "p2.pos <> 0 "
+                "and  "
+                "p1.build = %s "
+            ") "
+            "order by count(id) desc limit 2" # REMOVE LIMIT
+            )
     fname = 'samepos.txt'
-    qf = QueryFile(fname,qsamepos)
+    qf = QueryFile(fname,qsamepos,vals)
     conn = DBConnect('chip_comp')
     curs = conn.getCursor(dic=True)
     cursm = conn.getCursor()
