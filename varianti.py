@@ -269,6 +269,7 @@ class VariantM(VariantI):
                 q = "UPDATE positions SET id = %s WHERE build = %s AND id = %s AND pos = %s"
                 vals = (self.main_id,opp_build,alt_id,opp_alt[0][0])
                 print("alt id %s in opposite build %s but main id %s not, so switch the main id in (pos (%s))" % (alt_id,opp_build,self.main_id,opp_alt[0][0]))
+                #self.curs.execute(q,vals)
         else: # alt id not in opposite build, no change necesary
             print("alt id not in opp build, no change necessary")
 #self.curs.execute("UPDATE consensus SET id = %s, uid_datasource = %s where id = %s",(db_snp,new_ds,uid_to_swapout))

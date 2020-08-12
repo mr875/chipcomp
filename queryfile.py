@@ -8,7 +8,8 @@ class QueryFile:
         self.qry = qry
         self.vals = vals
         self.db = db
-        self._makeF()   #put back for file generation
+        self.row_count = 0
+#        self._makeF()   #put back for file generation
 
     def _makeF(self):
         try:
@@ -17,6 +18,7 @@ class QueryFile:
             curs = conn.getCursor()
             curs.execute(self.qry,self.vals)
             for row in curs:
+                self.row_count += 1
                 row = [str(i) for i in row]
                 f.write("\t".join(row))
                 f.write("\n")

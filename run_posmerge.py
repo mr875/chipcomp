@@ -1,3 +1,6 @@
+import time
+import datetime
+import logging
 from queryfile import QueryFile
 from connect import DBConnect
 from varianti import VariantM
@@ -69,6 +72,12 @@ def main():
             )
     fname = 'samepos.txt'
     qf = QueryFile(fname,qsamepos,vals)
+    #rc = qf.row_count
+    rc = 3
+    logfile = datetime.datetime.now().strftime("pmerge_%a_%d%b_%I%p.log")
+    logging.basicConfig(filename=logfile, level=logging.INFO)
+    start = time.time()
+    count = 0
     conn = DBConnect('chip_comp')
     curs = conn.getCursor(dic=True)
     cursm = conn.getCursor()
