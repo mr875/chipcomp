@@ -4,6 +4,7 @@ import logging
 from queryfile import QueryFile
 from connect import DBConnect
 from varianti import VariantM
+from varianti import NotMerged
 import sys
 from collections import Counter
 
@@ -50,8 +51,10 @@ def mergeids(chose,dups,curs,conn):
 
 def main():
 
+    db = 'chip_comp'
     build = '37'
     vals = (build,build)
+    # for a build, find positions that have multiple entries. filter out positions used by ids that occur multiple times but with different positions. 
     qsamepos = ("select pos,count(id) from positions where build = %s group by pos having count(id) > 1 and pos <> 0 and pos not in "
             "( "
                 "select p1.pos from positions p1, positions p2  "
@@ -71,14 +74,17 @@ def main():
             "order by count(id) desc limit 3" # REMOVE LIMIT
             )
     fname = 'samepos.txt'
-    qf = QueryFile(fname,qsamepos,vals)
-    #rc = qf.row_count
+    qf = QueryFile(fname,qsamepos,vals,db)
+#    rc = qf.row_count
     rc = 3
+    fvper = int(0.05 * rc)
+    logline = fvper
     logfile = datetime.datetime.now().strftime("pmerge_%a_%d%b_%I%p.log")
     logging.basicConfig(filename=logfile, level=logging.INFO)
+    logging.info('run_posmerge.py: created %s with %s rows, using db %s, merging on build %s',fname,rc,db,build)
     start = time.time()
     count = 0
-    conn = DBConnect('chip_comp')
+    conn = DBConnect(db)
     curs = conn.getCursor(dic=True)
     cursm = conn.getCursor()
     for line in qf.read():
@@ -87,7 +93,13 @@ def main():
             whichind = choose(posdups)
             whichone = posdups[whichind]
             whichdups = [d for i,d in enumerate(posdups) if i != whichind]
-            mergeids(whichone,whichdups,cursm,conn)
+#            mergeids(whichone,whichdups,cursm,conn)
+            count += 1
+            if logline == count:
+                now = int(time.time() - start)
+                logging.info("approximately %.2f%% parsed after %s seconds, %s positions, line: %s" % ((count/rc*100),now,count,line))
+                logline += fvper
+                
         except Exception as e:
             conn.rollback()
             conn.close()

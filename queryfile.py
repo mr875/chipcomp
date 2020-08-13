@@ -9,7 +9,7 @@ class QueryFile:
         self.vals = vals
         self.db = db
         self.row_count = 0
-#        self._makeF()   #put back for file generation
+        self._makeF()   #put back for file generation
 
     def _makeF(self):
         try:
