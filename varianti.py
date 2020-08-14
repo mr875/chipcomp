@@ -232,12 +232,13 @@ class NotMerged(Exception):
 
 class VariantM(VariantI):
 
-    def __init__(self,curs,main_id,pos,build,ds):
+    def __init__(self,curs,main_id,pos,build,ds,chrm):
         self.main_id = main_id
         self.datasource = ds
         self.build = build
         self.curs = curs
         self.pos = pos
+        self.chr = chrm
 
     def snpid_swapin(self,alt_id,alt_ds):
         opp_build = '38'

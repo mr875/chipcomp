@@ -9,10 +9,9 @@ import sys
 from collections import Counter
 
 def getvars(line,curs,build):
-    pos,tot = line.split("\t")
-#    pos = int(pos)
-    q = 'SELECT * FROM positions WHERE pos = %s AND build = %s'
-    curs.execute(q,(pos,build))
+    pos,chrm,tot = line.split("\t")
+    q = 'SELECT * FROM positions WHERE pos = %s AND build = %s AND chr = %s'
+    curs.execute(q,(pos,build,chrm))
     allpos = curs.fetchall()
     return allpos
 
@@ -23,8 +22,6 @@ def choose(posdups):
     for d in posdups:
         ds.append(d['datasource'])
         ids.append(d['id'])
-    #leastds = ds.index(Counter(ds).most_common()[-1][0])
-    #print(ds[leastds])
     leastds = Counter(ds).most_common()[-1][0]
     leastds = [i for i,x in enumerate(ds) if x == leastds]
     rs = [i for i,x in enumerate(ids) if "rs" in x]
@@ -38,7 +35,7 @@ def choose(posdups):
 
 def mergeids(chose,dups,curs,conn):
     print()
-    main = VariantM(curs,chose['id'],chose['pos'],chose['build'],chose['datasource'])
+    main = VariantM(curs,chose['id'],chose['pos'],chose['build'],chose['datasource'],chose['chr'])
     for dupd in dups:
         print("merging alt %s with main %s" % (dupd['id'],chose['id']))
         try:
@@ -55,7 +52,7 @@ def main():
     build = '37'
     vals = (build,build)
     # for a build, find positions that have multiple entries. filter out positions used by ids that occur multiple times but with different positions. 
-    qsamepos = ("select pos,count(id) from positions where build = %s group by pos having count(id) > 1 and pos <> 0 and pos not in "
+    qsamepos = ("select pos,chr,count(id) from positions where build = %s group by pos,chr having count(id) > 1 and pos <> 0 and pos not in "
             "( "
                 "select p1.pos from positions p1, positions p2  "
                 "where "
@@ -75,8 +72,8 @@ def main():
             )
     fname = 'samepos.txt'
     qf = QueryFile(fname,qsamepos,vals,db)
-#    rc = qf.row_count
-    rc = 3
+    rc = qf.row_count
+#    rc = 3
     fvper = int(0.05 * rc)
     logline = fvper
     logfile = datetime.datetime.now().strftime("pmerge_%a_%d%b_%I%p.log")
