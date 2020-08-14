@@ -249,7 +249,6 @@ class VariantM(VariantI):
         opp_alt = self.curs.fetchall()
         self.curs.execute(q,(opp_build,self.main_id))
         opp_main = self.curs.fetchall()
-        print("in opposite build %s alt id present: %s main id present: %s" % (opp_build,str(len(opp_alt)),str(len(opp_main)))) 
         #going to merge multiple ids that have the same position as self.main_id, but check opposite build first
         if len(opp_alt):
             if len(opp_alt) > 1: #alt id shouldn't be appearing more than once. raise error for logging
@@ -263,34 +262,23 @@ class VariantM(VariantI):
                     q = "DELETE FROM positions WHERE build = %s AND id = %s AND pos = %s"
                     vals = (opp_build,alt_id,opp_alt_pos)
                     self.curs.execute(q,vals)
-                    print("main id (%s) and alt id (%s) already in opposite build %s and positions match so removing alt id %s from opposite build" % (self.main_id,alt_id,opp_build,alt_id))
                 else:# main id and alt id already in opp build but with different positions logged so can't do a clean swap for this alt_id
                     raise NotMerged("swapping alt id %s for main_id %s in build %s but detected both alt and main ids already in opposite build %s but do have the same positions (%s vs %s)" % (alt_id,self.main_id,self.build,opp_build))
             else: # alt id in opposite build but main id not, so switch the main id in 
                 q = "UPDATE positions SET id = %s WHERE build = %s AND id = %s AND pos = %s"
                 vals = (self.main_id,opp_build,alt_id,opp_alt[0][0]) 
-                print("alt id %s in opposite build %s but main id %s not, so switch the main id in (pos (%s))" % (alt_id,opp_build,self.main_id,opp_alt[0][0])) 
                 self.curs.execute(q,vals) 
-        else: # alt id not in opposite build, no change necesary print("alt id not in opp build, no change necessary")
-            print("alt id not in opp build, no change necessary")
-
-
+        #else: # alt id not in opposite build, no change necesary 
         self.curs.execute("DELETE FROM positions WHERE id = %s AND build = %s",(alt_id,self.build))
-        
         self.curs.execute("UPDATE IGNORE alt_ids SET id = %s WHERE id = %s",(self.main_id,alt_id))
         self.curs.execute("DELETE FROM alt_ids WHERE id = %s",(alt_id,))
         self.curs.execute("INSERT IGNORE INTO alt_ids (id, alt_id, datasource) VALUES (%s, %s, %s)",(self.main_id,alt_id,alt_ds))
-        
         self.curs.execute("UPDATE IGNORE flank SET id = %s WHERE id = %s",(self.main_id,alt_id))
         self.curs.execute("DELETE FROM flank WHERE id = %s",(alt_id,))
-
         self.curs.execute("UPDATE IGNORE probes SET id = %s where id = %s",(self.main_id,alt_id))
         self.curs.execute("DELETE FROM probes WHERE id = %s",(alt_id,)) 
-
         self.curs.execute("UPDATE IGNORE snp_present SET id = %s WHERE id = %s",(self.main_id,alt_id)) 
         self.curs.execute("DELETE FROM snp_present WHERE id = %s",(alt_id,)) # if alt_id not updated because main_id--datasource already exists (ignored) then remove it
-
         self.curs.execute("UPDATE IGNORE match_count SET id = %s where id = %s",(self.main_id,alt_id))
         self.curs.execute("DELETE FROM match_count WHERE id = %s",(alt_id,))
-
         self.curs.execute("DELETE FROM consensus WHERE id = %s",(alt_id,))

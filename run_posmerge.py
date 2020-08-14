@@ -34,14 +34,14 @@ def choose(posdups):
         return leastds[0]
 
 def mergeids(chose,dups,curs,conn):
-    print()
     main = VariantM(curs,chose['id'],chose['pos'],chose['build'],chose['datasource'],chose['chr'])
     for dupd in dups:
-        print("merging alt %s with main %s" % (dupd['id'],chose['id']))
+        #print("merging alt %s with main %s" % (dupd['id'],chose['id']))
         try:
             main.snpid_swapin(dupd['id'],dupd['datasource'])
         except NotMerged as nm:
-            print("not-merged error: ",nm) # for logging
+            statement = "not-merged error: " + str(nm)
+            logging.warning(statement)
             conn.rollback()
         else:
             conn.commit()
@@ -90,24 +90,22 @@ def main():
             whichind = choose(posdups)
             whichone = posdups[whichind]
             whichdups = [d for i,d in enumerate(posdups) if i != whichind]
-#            mergeids(whichone,whichdups,cursm,conn)
+            mergeids(whichone,whichdups,cursm,conn)
             count += 1
             if logline == count:
                 now = int(time.time() - start)
                 logging.info("approximately %.2f%% parsed after %s seconds, %s positions, line: %s" % ((count/rc*100),now,count,line))
                 logline += fvper
-                
         except Exception as e:
             conn.rollback()
             conn.close()
-            print("error at merging step ",line,sys.exc_info()[0], e)
+            statement = "error at merging step for line " + line + str(sys.exc_info()[0]) + str(e)
+            logging.error(statement)
             raise
-#        else:
-#            conn.commit() # already done after each sub loop in mergeids
-            
+    now = int(time.time() - start)
+    logging.info('Finished after %s seconds (%s rows)' % (now,rc))
     conn.close()
 
 
 if __name__ == '__main__':
     main()
-#variant = VariantI(curs,dic,new_ds,build)
