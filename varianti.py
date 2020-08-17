@@ -263,7 +263,7 @@ class VariantM(VariantI):
                     vals = (opp_build,alt_id,opp_alt_pos)
                     self.curs.execute(q,vals)
                 else:# main id and alt id already in opp build but with different positions logged so can't do a clean swap for this alt_id
-                    raise NotMerged("swapping alt id %s for main_id %s in build %s but detected both alt and main ids already in opposite build %s but do have the same positions (%s vs %s)" % (alt_id,self.main_id,self.build,opp_build))
+                    raise NotMerged("swapping alt id %s for main_id %s in build %s but detected both alt and main ids already in opposite build %s but do not have the same positions (%s vs %s)" % (alt_id,self.main_id,self.build,opp_build,opp_alt_pos,opp_main_pos))
             else: # alt id in opposite build but main id not, so switch the main id in 
                 q = "UPDATE positions SET id = %s WHERE build = %s AND id = %s AND pos = %s"
                 vals = (self.main_id,opp_build,alt_id,opp_alt[0][0]) 
