@@ -68,12 +68,11 @@ def main():
                 "and  "
                 "p1.build = %s "
             ") "
-            "order by count(id) desc limit 3" # REMOVE LIMIT
+            "order by count(id)" # desc limit 3" # REMOVE LIMIT
             )
     fname = 'samepos.txt'
     qf = QueryFile(fname,qsamepos,vals,db)
     rc = qf.row_count
-#    rc = 3
     fvper = int(0.05 * rc)
     logline = fvper
     logfile = datetime.datetime.now().strftime("pmerge_%a_%d%b_%I%p.log")
