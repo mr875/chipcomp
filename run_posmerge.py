@@ -49,7 +49,7 @@ def mergeids(chose,dups,curs,conn):
 def main():
 
     db = 'chip_comp'
-    build = '37'
+    build = '38'
     vals = (build,build)
     # for a build, find positions that have multiple entries. filter out positions used by ids that occur multiple times but with different positions. 
     qsamepos = ("select pos,chr,count(id) from positions where build = %s group by pos,chr having count(id) > 1 and pos <> 0 and pos not in "
@@ -68,7 +68,7 @@ def main():
                 "and  "
                 "p1.build = %s "
             ") "
-            "order by count(id)" # desc limit 3" # REMOVE LIMIT
+            "order by count(id) desc" # limit 3" # REMOVE LIMIT
             )
     fname = 'samepos.txt'
     qf = QueryFile(fname,qsamepos,vals,db)
