@@ -91,6 +91,10 @@ class ChipReader:
             comblist.append([a,b])
         return comblist
 
+    def rev(self,seq): # https://github.com/cathalgarvey/dna2way/blob/master/dnahash.py
+        revseq = ''.join({"A":"T","C":"G","G":"C","T":"A","N":"N"}[n] for n in seq[::-1])
+        return revseq
+
     def checkflank(self,seq):
         seqsplit = []
         a = seq.split('[')
@@ -105,7 +109,7 @@ class ChipReader:
             return None
         return seqsplit
 
-    def flankcomp(self,seq1,seq2):
+    def flankcomp(self,seq1,seq2,rev=False):
         seq1split = self.checkflank(seq1)
         seq2split = self.checkflank(seq2)
         seq1valid = False
@@ -119,9 +123,9 @@ class ChipReader:
         #seq1valid=seq2valid=False #reset
         seq1expunge = (seq1split[0]+seq1split[1]).upper()
         seq2expunge = (seq2split[0]+seq2split[1]).upper()
-        return self.gencomp(seq1expunge,seq2expunge)
+        return self.gencomp(seq1expunge,seq2expunge,rev)
 
-    def gencomp(self,seq1,seq2):
+    def gencomp(self,seq1,seq2,rev=False):
         seq1valid = False
         seq2valid = False
         if len(seq1) > 25:
@@ -133,15 +137,19 @@ class ChipReader:
         seq1valid=seq2valid=False
         if len(seq1) >= len(seq2):
             seq1valid = True
+            if rev:
+                seq2 = self.rev(seq2)
             if seq2 not in seq1:
                 seq2valid = True
         else:
             seq2valid = True
+            if rev:
+                seq1 = self.rev(seq1)
             if seq1 not in seq2:
                 seq1valid = True
         return seq1valid,seq2valid
 
-    def choose_flankseq(self,line_arr,seq_inds,flank = True):
+    def choose_flankseq(self,line_arr,seq_inds,flank=True):
         seqs = [line_arr[coln] for coln in seq_inds]
         comblist = self.comblist(len(seqs))
         #print(comblist)  # all comparisons

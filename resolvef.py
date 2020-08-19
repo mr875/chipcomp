@@ -21,6 +21,8 @@ class ResolveF(ChipReader):
             seq1 = self.allfl[comb[0]]['flank_seq']
             seq2 = self.allfl[comb[1]]['flank_seq']
             seq1keep, seq2keep = self.flankcomp(seq1,seq2)  
+            if seq1keep and seq2keep:
+                seq1keep, seq2keep = self.flankcomp(seq1,seq2,rev=True)
             print("%s:%s\n%s:%s" % (str(seq1keep),seq1,str(seq2keep),seq2))
             print()
 
@@ -42,6 +44,7 @@ def main():
     conn = DBConnect(db)
     curs = conn.getCursor(dic=True)
     for line in qf.read():
+        print(line)
         allfl = getvars(line,curs)
         fr = ResolveF(allfl)
     conn.close()
