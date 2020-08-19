@@ -77,6 +77,14 @@ class ChipReader:
             for line in reader:
                 yield line
 
+    def leftright(self,flank):
+        flank = flank.upper()
+        swaps = {"A":"T","C":"G","G":"C","T":"A","N":"N","[":"]"}       
+        left = flank.split('[')[0] + '['
+        leftend = left[-7:]
+        rightbeg = ''.join(swaps[n] for n in leftend[::-1])
+        return leftend,rightbeg
+
     def fillcust(self,custom_titles):
         try:
             ordrdlst = [self.colnum(i) for i in custom_titles]

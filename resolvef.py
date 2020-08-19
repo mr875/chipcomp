@@ -12,10 +12,11 @@ class ResolveF(ChipReader):
         self.knownstrandflags = ["+","PLUS","TOP"]
         self.knowncolnameflags = ["Forward_Seq","Plus_Seq","TopGenomicSeq","Plus_Seq"]
         self.allfl = allfl
+        print(self.check_local())
         self.combos = self.comblist(len(self.allfl))
         self.remove = self.choose_flankseq()
 
-    def print_result(self):
+    def print_result(self): # for testing
         print("REMOVE:")
         for ind in self.remove:
             fl = self.allfl[ind]
@@ -25,6 +26,17 @@ class ResolveF(ChipReader):
             if ind in self.remove:
                 continue
             print(fl['colname'],fl['flank_strand'],fl['flank_seq']) 
+
+    def check_local(self):
+        model = self.allfl[0]['flank_seq']
+        print(model)
+        left,right = self.leftright(model)
+        print(left,right)
+        for fl in self.allfl[1:]:
+            comp = fl['flank_seq'].upper()
+            if left not in comp and right not in comp:
+                return False
+        return True
 
     def choose_flankseq(self):
         remove = set()  
@@ -77,7 +89,7 @@ def getvars(line,curs):
 def main():
 
     db = 'cc2'
-    q = "SELECT id,COUNT(flank_seq) FROM flank GROUP BY id HAVING COUNT(flank_seq) > %s ORDER BY COUNT(flank_seq) ASC limit 10" # REMOVE limit after testing
+    q = "SELECT id,COUNT(flank_seq) FROM flank GROUP BY id HAVING COUNT(flank_seq) > %s ORDER BY COUNT(flank_seq) DESC limit 10" # REMOVE limit after testing
     vals = (1,)
     fname = 'twos.txt'
     qf = QueryFile(fname,q,vals,db)
@@ -88,7 +100,7 @@ def main():
         print(line)
         allfl = getvars(line,curs)
         fr = ResolveF(allfl)
-        fr.print_result()
+        #fr.print_result()
     conn.close()
 
 
