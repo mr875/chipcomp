@@ -7,14 +7,28 @@ from queryfile import QueryFile
 
 class ResolveF(ChipReader):
 
+
     def __init__(self,allfl):
+        self.knownstrandflags = ["+","PLUS","TOP"]
+        self.knowncolnameflags = ["Forward_Seq","Plus_Seq","TopGenomicSeq","Plus_Seq"]
         self.allfl = allfl
         self.combos = self.comblist(len(self.allfl))
-        self.choose_flankseq()
+        self.remove = self.choose_flankseq()
+
+    def print_result(self):
+        print("REMOVE:")
+        for ind in self.remove:
+            fl = self.allfl[ind]
+            print(fl['colname'],fl['flank_strand'],fl['flank_seq']) 
+        print("KEEP:")
+        for ind,fl in enumerate(self.allfl):
+            if ind in self.remove:
+                continue
+            print(fl['colname'],fl['flank_strand'],fl['flank_seq']) 
 
     def choose_flankseq(self):
         remove = set()  
-        keep = []
+        combindxinclude = []
         for ind,comb in enumerate(self.combos): 
             if set(comb) & remove:
                 continue
@@ -23,8 +37,35 @@ class ResolveF(ChipReader):
             seq1keep, seq2keep = self.flankcomp(seq1,seq2)  
             if seq1keep and seq2keep:
                 seq1keep, seq2keep = self.flankcomp(seq1,seq2,rev=True)
-            print("%s:%s\n%s:%s" % (str(seq1keep),seq1,str(seq2keep),seq2))
-            print()
+            #print("%s:%s\n%s:%s" % (str(seq1keep),seq1,str(seq2keep),seq2))
+            #print()
+            if seq1keep and seq2keep:
+                continue
+            # one will be false from now, add check?
+            goodcol1 = self.goodcol(comb[0])
+            goodcol2 = self.goodcol(comb[1])
+            if seq1:
+               rem = comb[1]
+               if not goodcol1:
+                   if goodcol2:
+                       rem = comb[0]
+            else:
+                rem = comb[0]
+                if not goodcol2:
+                    if goodcol1:
+                        rem = comb[1]
+            remove.add(rem)
+        return remove
+
+    def goodcol(self,ind):
+        flk_str = self.allfl[ind]['flank_strand']
+        colname = self.allfl[ind]['colname']
+        if flk_str in self.knownstrandflags:
+            return True
+        if colname in self.knowncolnameflags:
+            return True
+        return False
+            
 
 def getvars(line,curs):
     idf = line.split("\t")[0]
@@ -36,7 +77,7 @@ def getvars(line,curs):
 def main():
 
     db = 'cc2'
-    q = "SELECT id,COUNT(flank_seq) FROM flank GROUP BY id HAVING COUNT(flank_seq) > %s ORDER BY COUNT(flank_seq) DESC limit 10" # REMOVE limit after testing
+    q = "SELECT id,COUNT(flank_seq) FROM flank GROUP BY id HAVING COUNT(flank_seq) > %s ORDER BY COUNT(flank_seq) ASC limit 10" # REMOVE limit after testing
     vals = (1,)
     fname = 'twos.txt'
     qf = QueryFile(fname,q,vals,db)
@@ -47,6 +88,7 @@ def main():
         print(line)
         allfl = getvars(line,curs)
         fr = ResolveF(allfl)
+        fr.print_result()
     conn.close()
 
 
