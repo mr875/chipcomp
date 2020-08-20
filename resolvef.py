@@ -91,7 +91,7 @@ def getvars(line,curs):
 
 def main():
 
-    db = 'cc2'
+    db = 'chip_comp'
     q = "SELECT id,COUNT(flank_seq) FROM flank GROUP BY id HAVING COUNT(flank_seq) > %s ORDER BY COUNT(flank_seq) DESC limit 10" # REMOVE limit after testing
     vals = (1,)
     fname = 'twos.txt'
@@ -113,6 +113,8 @@ def main():
             fr = ResolveF(allfl)
             if fr.local:
                 fr.print_result()
+            else:
+                logging.warning("line [%s] not filtered because local variant location appears to not be consistent" % (line.rstrip(),))
             count += 1
             if logline == count:
                 now = int(time.time() - start)
