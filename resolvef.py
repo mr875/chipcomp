@@ -1,4 +1,5 @@
 from chipreader import ChipReader
+import sys
 from connect import DBConnect
 import time
 import datetime
@@ -12,9 +13,11 @@ class ResolveF(ChipReader):
         self.knownstrandflags = ["+","PLUS","TOP"]
         self.knowncolnameflags = ["Forward_Seq","Plus_Seq","TopGenomicSeq","Plus_Seq"]
         self.allfl = allfl
-        print(self.check_local())
         self.combos = self.comblist(len(self.allfl))
-        self.remove = self.choose_flankseq()
+        self.local = False
+        if self.check_local():
+            self.local = True
+            self.remove = self.choose_flankseq()
 
     def print_result(self): # for testing
         print("REMOVE:")
@@ -29,9 +32,9 @@ class ResolveF(ChipReader):
 
     def check_local(self):
         model = self.allfl[0]['flank_seq']
-        print(model)
+#        print(model)
         left,right = self.leftright(model)
-        print(left,right)
+#        print(left,right)
         for fl in self.allfl[1:]:
             comp = fl['flank_seq'].upper()
             if left not in comp and right not in comp:
@@ -94,13 +97,35 @@ def main():
     fname = 'twos.txt'
     qf = QueryFile(fname,q,vals,db)
     rc = qf.row_count
+    fvper = int(0.01 * rc)
+    logline = fvper
+    logfile = datetime.datetime.now().strftime("resflk_%a_%d%b_%I%p.log")
+    logging.basicConfig(filename=logfile, level=logging.INFO)
+    logging.info('resolvef.py: created %s with %s rows, using db %s',fname,rc,db)
+    start = time.time()
+    count = 0
     conn = DBConnect(db)
     curs = conn.getCursor(dic=True)
     for line in qf.read():
         print(line)
-        allfl = getvars(line,curs)
-        fr = ResolveF(allfl)
-        #fr.print_result()
+        try:
+            allfl = getvars(line,curs)
+            fr = ResolveF(allfl)
+            if fr.local:
+                fr.print_result()
+            count += 1
+            if logline == count:
+                now = int(time.time() - start)
+                logging.info("approximately %.2f%% parsed after %s seconds, %s positions, line: %s" % ((count/rc*100),now,count,line))
+                logline += fvper
+        except Exception as e:
+            conn.rollback()
+            conn.close()
+            statement = "error at merging step for line " + line + str(sys.exc_info()[0]) + str(e)
+            logging.error(statement)
+            raise
+    now = int(time.time() - start)
+    logging.info('Finished after %s seconds (%s rows)' % (now,count))
     conn.close()
 
 
