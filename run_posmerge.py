@@ -101,6 +101,7 @@ def main():
             statement = "error at merging step for line " + line + str(sys.exc_info()[0]) + str(e)
             logging.error(statement)
             raise
+        #should prob add an else: commit
     now = int(time.time() - start)
     logging.info('Finished after %s seconds (%s rows)' % (now,rc))
     conn.close()
