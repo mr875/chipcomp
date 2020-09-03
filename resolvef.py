@@ -15,7 +15,7 @@ class ResolveF(ChipReader):
         self.allfl = allfl
         self.combos = self.comblist(len(self.allfl))
         self.local = False
-        if self.check_local():
+        if self.check_local(): # bp shift detection
             self.local = True
             self.remove = self.choose_flankseq()
 
@@ -30,11 +30,16 @@ class ResolveF(ChipReader):
                 continue
             print(fl['colname'],fl['flank_strand'],fl['flank_seq']) 
 
+    def remove_red(self,curs): 
+        q = 'DELETE FROM flank WHERE id = %s AND colname = %s AND datasource = %s' # these 3 cols = primary key
+        for ind in self.remove:
+            fl = self.allfl[ind]
+            args = (fl['id'],fl['colname'],fl['datasource'])
+            curs.execute(q,args)
+
     def check_local(self):
         model = self.allfl[0]['flank_seq']
-#        print(model)
         left,right = self.leftright(model)
-#        print(left,right)
         for fl in self.allfl[1:]:
             comp = fl['flank_seq'].upper()
             if left not in comp and right not in comp:
@@ -52,8 +57,6 @@ class ResolveF(ChipReader):
             seq1keep, seq2keep = self.flankcomp(seq1,seq2)  
             if seq1keep and seq2keep:
                 seq1keep, seq2keep = self.flankcomp(seq1,seq2,rev=True)
-            #print("%s:%s\n%s:%s" % (str(seq1keep),seq1,str(seq2keep),seq2))
-            #print()
             if seq1keep and seq2keep:
                 continue
             # one will be false from now, add check?
@@ -92,7 +95,7 @@ def getvars(line,curs):
 def main():
 
     db = 'chip_comp'
-    q = "SELECT id,COUNT(flank_seq) FROM flank GROUP BY id HAVING COUNT(flank_seq) > %s ORDER BY COUNT(flank_seq) DESC limit 10" # REMOVE limit after testing
+    q = "SELECT id,COUNT(flank_seq) FROM flank GROUP BY id HAVING COUNT(flank_seq) > %s ORDER BY COUNT(flank_seq) DESC"
     vals = (1,)
     fname = 'twos.txt'
     qf = QueryFile(fname,q,vals,db)
@@ -107,12 +110,12 @@ def main():
     conn = DBConnect(db)
     curs = conn.getCursor(dic=True)
     for line in qf.read():
-        print(line)
         try:
             allfl = getvars(line,curs)
             fr = ResolveF(allfl)
             if fr.local:
-                fr.print_result()
+#                fr.print_result()
+                fr.remove_red(curs)
             else:
                 logging.warning("line [%s] not filtered because local variant location appears to not be consistent" % (line.rstrip(),))
             count += 1
@@ -126,6 +129,8 @@ def main():
             statement = "error at merging step for line " + line + str(sys.exc_info()[0]) + str(e)
             logging.error(statement)
             raise
+        else:
+            conn.commit()
     now = int(time.time() - start)
     logging.info('Finished after %s seconds (%s rows)' % (now,count))
     conn.close()
