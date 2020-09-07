@@ -5,6 +5,12 @@ import time
 import datetime
 import logging
 
+def walk(qfit,curs):
+    pass
+
+def itls(qf):
+    for ls in qf.readls():
+        yield ls
 
 def main():
 
@@ -26,9 +32,8 @@ def main():
         q = "SELECT id,pos FROM positions WHERE chr = %s ORDER BY pos ASC LIMIT 100" # remove limit after testing
         vals = (chrm,)
         qf = QueryFile(fname,q,vals,db)
-
-
-    
+        qfit = itls(qf)
+        walk(qfit,curs) 
     
     conn.close()
 
