@@ -35,3 +35,8 @@ class QueryFile:
             for line in f:
                 yield line
 
+    def readls(self):
+        with open(self.bfile) as f:
+            for line in f:
+                line = line.rstrip().split("\t")
+                yield line
