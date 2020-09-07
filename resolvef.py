@@ -15,9 +15,17 @@ class ResolveF(ChipReader):
         self.allfl = allfl
         self.combos = self.comblist(len(self.allfl))
         self.local = False
+        self.local_alts = False
+        self.switchdic = {"A":"T","C":"G","G":"C","T":"A"}
+        self.switchextra = {"N":"N","R":"Y","Y":"R","S":"S","W":"W","K":"M","M":"K","B":"V","V":"B","D":"H","H":"D"}
         if self.check_local(): # bp shift detection
             self.local = True
             self.remove = self.choose_flankseq()
+        else:
+            for fl in self.allfl: #bp shift or just an 'N' in one of the near-snp locations that doesn't match?
+                left,right = self.leftright(fl['flank_seq'])
+                if self.contains_alt(left) or self.contains_alt(right):
+                    self.local_alts = True
 
     def print_result(self): # for testing
         print("REMOVE:")
@@ -45,6 +53,26 @@ class ResolveF(ChipReader):
             if left not in comp and right not in comp:
                 return False
         return True
+    
+    def contains_alt(self,seq):
+        seq = seq.upper()
+        for key in self.switchextra:
+            if seq.find(key):
+                return True
+        return False
+
+    def leftright(self,flank):
+        flank = flank.upper()
+        swaps = {**self.switchdic,**self.switchextra,"[":"]"}       
+        left = flank.split('[')[0] + '['
+        leftend = left[-6:]
+        rightbeg = ''.join(swaps[n] for n in leftend[::-1])
+        return leftend,rightbeg
+
+    def rev(self,seq): # https://github.com/cathalgarvey/dna2way/blob/master/dnahash.py
+        switchdic = {**self.switchdic,**self.switchextra}
+        revseq = ''.join(switchdic[n] for n in seq[::-1])
+        return revseq
 
     def choose_flankseq(self):
         remove = set()  
@@ -107,6 +135,7 @@ def main():
     logging.info('resolvef.py: created %s with %s rows, using db %s',fname,rc,db)
     start = time.time()
     count = 0
+    local_alts = 0 # counts when an alternative base (like 'N') appears within 5 bases of the variant IF it is unique compared with other flanks under th same id (for logging purposes because it prevents bp shift detection for the id)
     conn = DBConnect(db)
     curs = conn.getCursor(dic=True)
     for line in qf.read():
@@ -117,22 +146,37 @@ def main():
 #                fr.print_result()
                 fr.remove_red(curs)
             else:
-                logging.warning("line [%s] not filtered because local variant location appears to not be consistent" % (line.rstrip(),))
+                if fr.local_alts:
+                    local_alts += 1
+                else:
+                    logging.warning("line [%s] not filtered because local variant location appears to not be consistent" % (line.rstrip(),))
             count += 1
             if logline == count:
                 now = int(time.time() - start)
-                logging.info("approximately %.2f%% parsed after %s seconds, %s positions, line: %s" % ((count/rc*100),now,count,line))
+                logging.info("approximately %.2f%% parsed after %s seconds, %s positions, line: %s" % ((count/rc*100),now,count,line.rstrip()))
                 logline += fvper
+        except KeyError as ke:
+            dil_ds = False
+            for fl in allfl:
+                if fl['datasource'] == '114': # flank seqs from datasource 'DIL-taqman' are not in a format that can be compared (yet) so skip this variant
+                    dil_ds = True
+            if not dil_ds:
+                logging.error("unexpected KeyError, re-raising error for variant/line: %s" % (line.rstrip()))
+                conn.rollback()
+                conn.close()
+                raise
+            logging.info("detected key KeyError but this id has a DIL-taqman datasource and these flanks are not comparable yet so skipping " + line.rstrip())
         except Exception as e:
             conn.rollback()
             conn.close()
             statement = "error at merging step for line " + line + str(sys.exc_info()[0]) + str(e)
             logging.error(statement)
-            raise
+            raise 
         else:
             conn.commit()
     now = int(time.time() - start)
     logging.info('Finished after %s seconds (%s rows)' % (now,count))
+    logging.info('%s ids have alternative bases (like N) in close proximity to the variant position (uniquely) in some flank sequences. Basic base shift detection not possible in these cases' % (local_alts))
     conn.close()
 
 

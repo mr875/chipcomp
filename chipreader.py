@@ -77,14 +77,6 @@ class ChipReader:
             for line in reader:
                 yield line
 
-    def leftright(self,flank):
-        flank = flank.upper()
-        swaps = {"A":"T","C":"G","G":"C","T":"A","N":"N","[":"]"}       
-        left = flank.split('[')[0] + '['
-        leftend = left[-7:]
-        rightbeg = ''.join(swaps[n] for n in leftend[::-1])
-        return leftend,rightbeg
-
     def fillcust(self,custom_titles):
         try:
             ordrdlst = [self.colnum(i) for i in custom_titles]
@@ -98,10 +90,6 @@ class ChipReader:
         for a, b in itertools.combinations(range(tot), 2):
             comblist.append([a,b])
         return comblist
-
-    def rev(self,seq): # https://github.com/cathalgarvey/dna2way/blob/master/dnahash.py
-        revseq = ''.join({"A":"T","C":"G","G":"C","T":"A","N":"N"}[n] for n in seq[::-1])
-        return revseq
 
     def checkflank(self,seq):
         seqsplit = []
