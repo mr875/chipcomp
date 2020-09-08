@@ -61,11 +61,11 @@ class ResolveF(ChipReader):
                 return True
         return False
 
-    def leftright(self,flank):
+    def leftright(self,flank,bps=5):
         flank = flank.upper()
         swaps = {**self.switchdic,**self.switchextra,"[":"]"}       
         left = flank.split('[')[0] + '['
-        leftend = left[-6:]
+        leftend = left[-(bps+1):]
         rightbeg = ''.join(swaps[n] for n in leftend[::-1])
         return leftend,rightbeg
 
