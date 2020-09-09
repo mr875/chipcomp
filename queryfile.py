@@ -1,4 +1,5 @@
 import sys
+import os
 from connect import DBConnect
 
 class QueryFile:
@@ -40,3 +41,6 @@ class QueryFile:
             for line in f:
                 line = line.rstrip().split("\t")
                 yield line
+
+    def remove(self):
+        os.remove(self.bfile)
