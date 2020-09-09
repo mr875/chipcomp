@@ -18,7 +18,7 @@ class WalkF(ResolveF):
         orig = orig.upper()
         return [orig,rev]
 
-def walk(qf,curs,maxstep=2):
+def walk(qf,curs,report,maxstep=2):
     rc = qf.row_count
     fvper = int(0.20 * rc)
     logline = fvper
@@ -35,7 +35,6 @@ def walk(qf,curs,maxstep=2):
         nxtp = int(nxtp)
         diff = nxtp - pos
         if 0 < diff <= maxstep:
-            print("for difference of %s, found %s and %s" % (diff,pos,nxtp))
             first = getflank(curs,vid)
             second = getflank(curs,nxtv)
             f3prime = walkf.threeprimes(first,maxstep)[0]
@@ -51,11 +50,11 @@ def walk(qf,curs,maxstep=2):
             old_diff = diff
         else: # reset sets
             if increment_set_succ:
-                print("Successful increments (%s bps a time)" % (old_diff))
-                print(increment_set_succ)
+                report.write("validated shift - %s steps - %s    " % (old_diff,','.join(increment_set_succ)))
             if increment_set_fail:
-                print("unsuccessful increments (%s bps a time)" % (old_diff))
-                print(increment_set_fail)
+                report.write("unvalidated shift - %s steps - %s" % (old_diff,','.join(increment_set_fail)))
+            if increment_set_succ or increment_set_fail:
+                report.write("\n")
             increment_set_succ.clear()
             increment_set_fail.clear()
         vid = nxtv
@@ -66,11 +65,9 @@ def walk(qf,curs,maxstep=2):
             logging.info("approximately %.2f%% parsed (of current chromosome) after %s seconds, %s positions/lines, line: %s,%s" % ((count/rc*100),now,count,vid,pos))
             logline += fvper
     if increment_set_succ:
-        print("successful increments (%s bps a time) at end of file" % (old_diff))
-        print(increment_set_succ)
+        report.write("validated shift - %s steps - %s    " % (old_diff,','.join(increment_set_succ)))
     if increment_set_fail:
-        print("unsuccessful increments (%s bps a time) at end of file" % (old_diff))
-        print(increment_set_fail)
+        report.write("unvalidated shift - %s steps - %s" % (old_diff,','.join(increment_set_fail)))
 
 
 def getflank(curs,vid):
@@ -102,23 +99,32 @@ def main():
     logging.basicConfig(filename=logfile, level=logging.INFO)
     start = time.time()
     count = 0
-    chrs = [st[0] for st in chrs]
+    chrs = [st[0] for st in chrs if st[0] != '0']
     logging.info('chromwalk.py: found %s chromosomes to walk: %s',len(chrs),','.join(chrs))
-    for chrm in chrs[0]: #remove index[] after testing
-        fname = "walk_" + chrm + ".txt"
-        q = "SELECT id,pos FROM positions WHERE chr = %s ORDER BY pos ASC LIMIT 220" # remove limit after testing
-        vals = (chrm,)
-        qf = QueryFile(fname,q,vals,db)
-        count += qf.row_count
-        logging.info('starting %s, file has %s lines',fname,qf.row_count)
-        qfit = itls(qf)
-        walk(qf,curs) 
-        now = int(time.time() - start)
-        logging.info('done %s, took %s seconds',fname,now)
+    report = open('walk_report.txt','w')
+    try:
+        for chrm in chrs: #remove index[] after testing
+            report.write("Chromosome %s:\n" % (chrm))
+            fname = "walk_d_" + chrm + ".txt"
+            q = "SELECT id,pos FROM positions WHERE chr = %s ORDER BY pos ASC" #LIMIT 220" # remove limit after testing
+            vals = (chrm,)
+            qf = QueryFile(fname,q,vals,db)
+            count += qf.row_count
+            logging.info('starting %s, file has %s lines',fname,qf.row_count)
+            qfit = itls(qf)
+            walk(qf,curs,report) 
+            now = int(time.time() - start)
+            logging.info('done %s, took %s seconds',fname,now)
+            qf.remove()
+    except Exception as e:
+        statement = "error encountered during chromosome " + chrm + str(sys.exc_info()[0]) + str(e)
+        logging.error(statement)
+        raise 
+    finally:
+        report.close()
+        conn.close()
     now = int(time.time() - start)
     logging.info('Finished all chromosomes after %s seconds (%s rows)' % (now,count))
-    
-    conn.close()
 
 if __name__ == '__main__':
     main()
