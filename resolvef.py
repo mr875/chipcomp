@@ -61,13 +61,21 @@ class ResolveF(ChipReader):
                 return True
         return False
 
-    def leftright(self,flank,bps=5):
+    def leftright(self,flank,bps=5): #grab left bit before [variant] and reverse compliment it: LLL[ -> ]RRR
         flank = flank.upper()
         swaps = {**self.switchdic,**self.switchextra,"[":"]"}       
         left = flank.split('[')[0] + '['
         leftend = left[-(bps+1):]
         rightbeg = ''.join(swaps[n] for n in leftend[::-1])
         return leftend,rightbeg
+
+    def rightleft(self,flank,bps=5): #grab right but after [variant] and reverse compliment it: ]RRR -> LLL[
+        flank = flank.upper()
+        swaps = {**self.switchdic,**self.switchextra,"]":"["} 
+        right = ']' + flank.split(']')[1]
+        rightbeg = right[:bps+1]
+        leftend = ''.join(swaps[n] for n in rightbeg[::-1])
+        return rightbeg,leftend
 
     def rev(self,seq): # https://github.com/cathalgarvey/dna2way/blob/master/dnahash.py
         switchdic = {**self.switchdic,**self.switchextra}
