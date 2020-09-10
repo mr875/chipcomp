@@ -18,6 +18,13 @@ class WalkF(ResolveF):
         orig = orig.upper()
         return [orig,rev]
 
+    def fiveprimes(self,flank,maxstep=2):
+        basen = maxstep + 3
+        right,rev = self.rightleft(flank,basen)
+        orig = flank.split('[')[0][-basen:] + '['
+        orig = orig.upper()
+        return [orig,rev]
+
 def walk(qf,curs,report,maxstep=2):
     rc = qf.row_count
     fvper = int(0.20 * rc)
@@ -37,11 +44,18 @@ def walk(qf,curs,report,maxstep=2):
         if 0 < diff <= maxstep:
             first = getflank(curs,vid)
             second = getflank(curs,nxtv)
-            f3prime = walkf.threeprimes(first,maxstep)[0]
-            s3primes = walkf.threeprimes(second,maxstep)
+            f3prime = walkf.threeprimes(first,maxstep)[0] #original right side (3') of first flank
+            s3primes = walkf.threeprimes(second,maxstep) #array: original right side and reversed left to right side of second flank
+            f5prime = walkf.fiveprimes(first,maxstep)[0] #original left side (5') of first flank
+            s5primes = walkf.fiveprimes(second,maxstep) #array: original left side and reversed right to left side of second flank
             s3primes = [bs[1:4] for bs in s3primes]
-            expsecond = f3prime[diff+1:diff+4] # +1 accounts for ']' and +4 makes the triplet 
-            if expsecond in s3primes:
+            exp3psecond = f3prime[diff+1:diff+4] # +1 accounts for ']' and +4 makes the triplet 
+            s5primes = [bs[-4:-1] for bs in s5primes]
+            exp5psecond = f5prime[-diff-1-3:-diff-1] # -1 for '[' and -3 makes the triplet
+            if exp3psecond in s3primes:
+                increment_set_succ.add(vid)
+                increment_set_succ.add(nxtv)
+            elif exp5psecond in s5primes:
                 increment_set_succ.add(vid)
                 increment_set_succ.add(nxtv)
             else:
@@ -103,10 +117,10 @@ def main():
     logging.info('chromwalk.py: found %s chromosomes to walk: %s',len(chrs),','.join(chrs))
     report = open('walk_report.txt','w')
     try:
-        for chrm in chrs: #remove index[] after testing
+        for chrm in chrs[:1]: #remove index[] after testing
             report.write("Chromosome %s:\n" % (chrm))
             fname = "walk_d_" + chrm + ".txt"
-            q = "SELECT id,pos FROM positions WHERE chr = %s ORDER BY pos ASC" #LIMIT 220" # remove limit after testing
+            q = "SELECT id,pos FROM positions WHERE chr = %s ORDER BY build,pos ASC" #LIMIT 220" # remove limit after testing
             vals = (chrm,)
             qf = QueryFile(fname,q,vals,db)
             count += qf.row_count
