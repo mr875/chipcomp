@@ -4,6 +4,7 @@ from queryfile import QueryFile
 import time
 import datetime
 import logging
+import re
 
 class WalkF(ResolveF):
 
@@ -90,6 +91,16 @@ def getflank(curs,vid):
     curs.execute(q,vals)
     flanks = curs.fetchall()
     flank = flanks[0][0] # take first one. later: may add ranking to flank seqs and then ordered output will be possible
+    #---
+    if "[-/" in flank: #insertions of more than 1 bp change the sequence on the right hand side of ']' so shift all but the 1st one: GCG[-/CA]CAGA becomes GCG[-/C]ACAGA. This is just for matching purposes. the edit is not maintained anywhere
+        dpart = re.findall(r"\[-/([A-Za-z]+)",flank)[0]
+        shiftpart = dpart[1:]
+        keeppart = dpart[0]
+        left = flank.split('[')[0]
+        right = flank.split(']')[1]
+        newflank = left + '[-/' + keeppart + ']' + shiftpart + right
+        flank = newflank
+    #---
     return flank
 
 def itls(qf):
@@ -117,10 +128,11 @@ def main():
     logging.info('chromwalk.py: found %s chromosomes to walk: %s',len(chrs),','.join(chrs))
     report = open('walk_report.txt','w')
     try:
-        for chrm in chrs[:1]: #remove index[] after testing
+        for chrm in chrs:# [:1]: #remove index[] after testing
             report.write("Chromosome %s:\n" % (chrm))
             fname = "walk_d_" + chrm + ".txt"
             q = "SELECT id,pos FROM positions WHERE chr = %s ORDER BY build,pos ASC" #LIMIT 220" # remove limit after testing
+            #q = "SELECT id,pos FROM positions WHERE chr = %s AND id in ('exm27128','exm2250526','rs764252130','rs758750248','rs137990115') ORDER BY build,pos ASC" #LIMIT 220" # remove limit after testing
             vals = (chrm,)
             qf = QueryFile(fname,q,vals,db)
             count += qf.row_count
