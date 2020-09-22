@@ -414,3 +414,15 @@ class AxiUKBB_WCSG(ChipReader):
         self.fill_general(line_arr,line_dict)
         return line_dict
 
+class InfOmniExpr(InfEx24v1a2):
+    # example excerpt: /mnt/HPC/processed/mr875/tasks/dsp367/infomniexpr_Eg.csv
+    # original file: /mnt/HPC/processed/Metadata/variant_annotation/OmniExpress_annotation.csv
+    
+    def __init__(self,fname):
+        super().__init__(fname)
+        self.datasource="73"
+    
+    def load_cols(self):
+        super().load_cols()
+        self.col_GRCh37_pos = self.col_GRCh38_pos
+        self.col_GRCh38_pos = None

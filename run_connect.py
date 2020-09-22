@@ -82,6 +82,7 @@ def readin(chip,reader,offset=0):
 #        AxiUKBB_WCSG('/mnt/HPC/processed/mr875/tasks/dsp367/AxiUKBB_WCSG_Eg.csv'),
 #        InfImmun24v2grc38('/mnt/HPC/processed/mr875/tasks/dsp367/infimmung38_Eg.csv'), 
 #        InfCorEx24v1_1grc38('/mnt/HPC/processed/mr875/tasks/dsp367/infincorex38_Eg.csv')] 
+readers = [InfOmniExpr('/mnt/HPC/processed/mr875/tasks/dsp367/infomniexpr_Eg.csv')]
 # debug:
 #readers = [AxiUKBBAffy2_1('/mnt/HPC/processed/mr875/tasks/dsp367/AxiUKBBAffy2_1_38_Eg.csv')]
 
@@ -92,13 +93,13 @@ def readin(chip,reader,offset=0):
 #        AxiUKBBAffy2_1('/mnt/HPC/processed/mr875/tasks/dsp367/Axiom_UKBBv2_1.na36.r1.a1.annot.csv'),
 #        AxiUKBB_WCSG('/mnt/HPC/processed/Metadata/variant_annotation/Axiom_UKB_WCSG.na35.annot-2015.csv'),
 #        InfImmun24v2('/mnt/HPC/processed/Metadata/variant_annotation/InfiniumImmunoArray_annotation.csv'),
-#        InfImmun24v2grc38('/mnt/HPC/processed/Metadata/variant_annotation_grch38/InfiniumImmunoArray-24v2-0_A2.csv')]
-
-readers = [InfCorEx24v1_1grc38('/mnt/HPC/processed/Metadata/variant_annotation_grch38/InfiniumCoreExome-24v1-1_A2.csv')]
+#        InfImmun24v2grc38('/mnt/HPC/processed/Metadata/variant_annotation_grch38/InfiniumImmunoArray-24v2-0_A2.csv'),
+#        InfCorEx24v1_1grc38('/mnt/HPC/processed/Metadata/variant_annotation_grch38/InfiniumCoreExome-24v1-1_A2.csv')]
+#readers = [InfOmniExpr('/mnt/HPC/processed/Metadata/variant_annotation/OmniExpress_annotation.csv')]
 #readers = [Dil('/mnt/HPC/processed/Metadata/variant_annotation/DIL_annotation.csv')]
 
-ch = DBConnect("cc3")
-#ch = DBConnect("chip_comp")
+#ch = DBConnect("cc3")
+ch = DBConnect("chip_comp")
 logfile = datetime.datetime.now().strftime("%a_%d%b_%I%p.log")
 logging.basicConfig(filename=logfile, level=logging.INFO)
 offsetclass = "" # "AxiUKBB_WCSG"  #pick a source class from which you don't want to parse from the beginning
