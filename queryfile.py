@@ -44,3 +44,12 @@ class QueryFile:
 
     def remove(self):
         os.remove(self.bfile)
+
+class NormFile(QueryFile):
+
+    def __init__(self,bfile):
+        self.bfile = bfile
+
+    def _makeF(self):
+        print("_makeF not available from NormFile instance")
+        print("use parent class QueryFile")
