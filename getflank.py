@@ -65,7 +65,6 @@ def getflank(pos,acc):
     return left,right 
 
 def main():
-    print("start") 
     rsids = NormFile('rsids.txt')
     for line in rsids.readls():
         chrm,pos,acc,allele,genename = getdetails(line[0])
