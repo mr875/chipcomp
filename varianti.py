@@ -185,7 +185,7 @@ class VariantI:
         indb = self.curs.fetchall() #list of tuples
         theseprobes = [] #probseq_seqs
         thesecolnames = [] #probseq_colnames
-        thesepstrand = [] # no examples yet, from chipreader.probstrand_cols
+        thesepstrand = [] # no examples yet, from chipreader.probstrand_cols or chipreader.col_probe_strand if single
         multiple = False
         if 'probseq_seqs' in self.dic:
             multiple = True
@@ -195,7 +195,13 @@ class VariantI:
                 thesepstrand = [None for p in theseprobes]
             else:
                 thesepstrand = self.dic['probestrand_vals']
-        #TODO elif single cols, but not 'else' for when no probe sequences at all
+        elif 'probseq' in self.dic: # single col
+            theseprobes.append(self.dic['probseq'])
+            thesecolnames.append(self.dic['probseq_colname'])
+            if 'probestrand_val' not in self.dic:
+                thesepstrand.append(None) 
+            else:
+                thesepstrand.append(self.dic['probestrand_val'])
         for ind,thisprobe in enumerate(theseprobes):
             toadd = True
             for dbprobe,dbprobeds in indb:
