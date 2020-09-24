@@ -30,8 +30,9 @@ class ChipReader:
         self.flankseqcoln = None # col number ^ fillcust(self.flankseqcols)
         self.flankseqcols_strand = None # col titles of flank strand, corresponding to flankseqcols 
         self.flankseqcoln_strand = None # col number of flank strand, filled with ^
+        self.tit_probe_seq = None
         self.col_probe_seq = None # if multiple use probseq_cols
-        self.col_probe_strand = None #if multiple use probstrand_cols 
+        self.col_probe_strand = None # 'probestrand_val' in dict output (if multiple use probstrand_cols)
         self.probseq_cols = None # col titles of probes
         self.probseq_coln = None #col number of probe seqs (fillcust(self.probseq_cols))
         self.probstrand_cols = None # col titles of probe strand
@@ -194,7 +195,11 @@ class ChipReader:
         line_dict['flankseq_seqs'] = seqs
         #TODO: need to handle line_dict['flankstrand_vals'] (self.flankseqcols_strand) 
 
-    def fill_probeseqs(self,line_arr,line_dict):
+    def fill_probeseqs(self,line_arr,line_dict,single=False):
+        if single:
+            line_dict['probseq'] = line_arr[self.col_probe_seq]
+            line_dict['probseq_colname'] = self.tit_probe_seq
+            return
         seqs_to_use = self.choose_flankseq(line_arr,self.probseq_coln,False)
         cols_used = [self.probseq_cols[i] for i in seqs_to_use]
         coln_used = [self.probseq_coln[i] for i in seqs_to_use]
@@ -426,3 +431,42 @@ class InfOmniExpr(InfEx24v1a2):
         super().load_cols()
         self.col_GRCh37_pos = self.col_GRCh38_pos
         self.col_GRCh38_pos = None
+
+class InfOmniExpr38(ChipReader):
+    # example excerpt: /mnt/HPC/processed/mr875/tasks/dsp367/infomniexpr38_Eg.csv
+    # original file: /mnt/HPC/processed/Metadata/variant_annotation_grch38/InfiniumOmniExpress-24v1-2_A2.csv
+
+    def __init__(self,fname):
+        super().__init__(fname)
+        self.datasource = "235"
+
+    def load_cols(self):
+        self.col_unique_id = self.colnum('Name')
+        self.col_chr = self.colnum('Chr')
+        self.col_GRCh38_pos = self.colnum('MapInfo')
+        
+    def load_custom(self):
+        self.title_topgenseq = "TopGenomicSeq"
+        self.title_sourceseq = "SourceSeq"
+        self.col_flank_strand = self.colnum('SourceStrand')
+        self.flankseqcols = [self.title_sourceseq, self.title_topgenseq]
+        self.flankseqcoln = self.fillcust(self.flankseqcols)
+        self.tit_probe_seq = 'AlleleA_ProbeSeq'
+        self.col_probe_seq = self.colnum(self.tit_probe_seq)
+
+    def proc_line(self,line_arr):
+        line_dict = dict()
+        self.fill_flankseqs(line_arr,line_dict)
+        flankseq_colnames = line_dict['flankseq_colnames']
+        flankstrand_vals = []
+        for colname in flankseq_colnames:
+            if colname == self.title_topgenseq:
+                flankstrand_vals.append("TOP")
+            elif colname == self.title_sourceseq:
+                flankstrand_vals.append(line_arr[self.col_flank_strand])
+            else:
+                raise StrandError("can't get strand value for %s" % (colname))
+        line_dict['flankstrand_vals'] = flankstrand_vals
+        self.fill_probeseqs(line_arr,line_dict,True)
+        self.fill_general(line_arr,line_dict)
+        return line_dict
