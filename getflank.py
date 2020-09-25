@@ -66,10 +66,37 @@ def getflank(pos,acc):
 
 def main():
     rsids = NormFile('rsids.txt')
+    exfl = open('external_flanks.txt','a+')
+    startid = ""
+    count = 0
+    fail_count = 0;
+    max_fail = 10
+    batch = 500
+    cont = True
     for line in rsids.readls():
-        chrm,pos,acc,allele,genename = getdetails(line[0])
-        left,right = getflank(pos,acc)
-        print("%s: %s[]%s" % (line[0],left,right))
+        if line[0] == startid:
+            cont = False
+        if cont and startid:
+            continue
+        count += 1
+        if count > batch:
+            break
+        try:
+            chrm,pos,acc,allele,genename = getdetails(line[0])
+            left,right = getflank(pos,acc)
+            exfl.write("%s\t%s[]%s\n" % (line[0],left,right))
+        except Exception as e:
+            fail_count+=1
+            statement = "error (%s) encountered at line/rs %s\n%s\n%s" % (fail_count,line[0],str(sys.exc_info()[0]),str(e))
+            print(statement) # swap for logging file
+            #logging.error(statement)
+            if fail_count >= max_fail:
+                exfl.close()
+                statement = "maximum error count reached, leaving process"
+                #logging.error(statement)
+                raise 
+    exfl.close()
+        
 
 if __name__ == '__main__':
     main()
