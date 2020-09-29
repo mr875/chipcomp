@@ -1,3 +1,4 @@
+# mysql chip_comp < exflank/getrsids.sql > exflank/rsids.txt
 SELECT id FROM flank
 WHERE id NOT IN
     (
