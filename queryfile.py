@@ -49,6 +49,14 @@ class NormFile(QueryFile):
 
     def __init__(self,bfile):
         self.bfile = bfile
+        self.row_count = self.wcl(bfile)
+
+    def wcl(self,fname):
+        with open(fname) as f:
+            line_count = 0
+            for line in f:
+                line_count += 1
+            return line_count
 
     def _makeF(self):
         print("_makeF not available from NormFile instance")
