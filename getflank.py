@@ -18,6 +18,7 @@ def getdetails(rsid):
         root = ET.fromstring(req.content)
     except Exception:
         logging.error("a problem occurred when trying to fetch (or load):",url)
+        raise
     message = "trouble finding %s Element for rsid %s:\n" + url
     namesp = root.tag.split("}")[0] + "}" # eg: {https://www.ncbi.nlm.nih.gov/SNP/docsum}DocumentSummary
     tofind = namesp + 'DocumentSummary'
@@ -30,6 +31,8 @@ def getdetails(rsid):
         pos = poselm.text
     else:
         raise XMLParseError(message % (tofind,rsid))
+    if not pos:
+        raise XMLParseError("no chromosome/position available at %s (%s) here:\n%s" % (tofind,rsid,url))
     tofind = namesp + 'ACC'
     accelm = main.find(tofind)
     if accelm is not None:
@@ -42,13 +45,15 @@ def getdetails(rsid):
         allele = allele_elm.text
     else:
         logging.info("%s: can't find %s\nbut not needed" % (rsid,tofind))
+        allele = None
         #raise XMLParseError(message % (tofind,rsid))
     tofind = namesp + 'GENES/' + namesp + 'GENE_E/' + namesp + 'NAME'
     genename_elm = main.find(tofind)
     if genename_elm is not None:
         genename = genename_elm.text
     else:
-        logging.info("%s: can't find %s\nbut not needed" % (rsid,tofind))
+        #logging.info("%s: can't find %s\nbut not needed" % (rsid,tofind)) # there are a lot of these. clutters log file
+        genename = None
         #raise XMLParseError(message % (tofind,rsid))
     chrm = pos.split(':')[0]
     pos = pos.split(':')[1]
@@ -72,20 +77,20 @@ def getflank(pos,acc):
 
 def main():
     rsids = NormFile('exflank/rsids.txt')
-    batch = 500
+    batch = 1925
+    startid = ""
+    max_fail = 20 
     rc = rsids.row_count
     logfile = datetime.datetime.now().strftime("gfl_%a_%d%b_%I%p.log")
     logging.basicConfig(filename=logfile, level=logging.INFO)
     fvper = int(0.05 * batch)
     logline = fvper
     start = time.time()
-    startid = ""
     strt_mess = 'from beginning of file'
     if startid:
         strt_mess = "from line containing '" + startid + "'"
     count = 0
-    fail_count = 0;
-    max_fail = 10
+    fail_count = 0
     logging.info('file %s has %s lines. Doing a batch of %s lines %s.' % (rsids.bfile,rc,batch,strt_mess))
     exfl = open('exflank/external_flanks.txt','a+')
     cont = True
