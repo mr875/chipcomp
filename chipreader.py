@@ -486,3 +486,15 @@ class MSExome(InfEx24v1a2):
         self.col_chr = self.colnum('Chr')
         self.col_GRCh37_pos = self.colnum('MapInfo')
 
+    def fill_general(self,line_arr,line_dict):
+        snp_id = self.getrs(line_arr[self.col_unique_id])
+        if self.col_dbSNP_id:
+            possible = line_arr[self.col_dbSNP_id]
+            if possible.startswith('rs'):
+                snp_id = possible
+        line_dict['snp_id'] = snp_id
+        main_id = line_arr[self.col_unique_id]
+        if main_id != snp_id:
+            line_dict['uid'] = main_id.replace('MS_Replication_Chip_','') # edited line from super
+        line_dict['chr'] = line_arr[self.col_chr]
+        line_dict['pos'] = int(line_arr[self.col_GRCh37_pos]) if self.col_GRCh37_pos else int(line_arr[self.col_GRCh38_pos])

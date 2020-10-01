@@ -15,6 +15,7 @@ readers = [InfCorEx24v1a1('/mnt/HPC/processed/mr875/tasks/dsp367/corev1_0_rsEg.c
     InfOmniExpr('/mnt/HPC/processed/mr875/tasks/dsp367/infomniexpr_Eg.csv'),
     InfOmniExpr38('/mnt/HPC/processed/mr875/tasks/dsp367/infomniexpr38_Eg.csv'),
     MSExome('/mnt/HPC/processed/mr875/tasks/dsp367/msexome_Eg.csv')]
+readers = [MSExome('ms_rep_output.txt')]
 
 for reader in readers:
 #    if not type(reader).__name__ == "MSExome":
