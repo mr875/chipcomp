@@ -77,9 +77,9 @@ def getflank(pos,acc):
 
 def main():
     rsids = NormFile('exflank/rsids.txt')
-    batch = 1925
+    batch = 1925 # set to higher than line number of rsids.txt if you want to parse the whole file
     startid = ""
-    max_fail = 20 
+    max_fail = 10 # allow some failures before exiting
     rc = rsids.row_count
     logfile = datetime.datetime.now().strftime("gfl_%a_%d%b_%I%p.log")
     logging.basicConfig(filename=logfile, level=logging.INFO)
