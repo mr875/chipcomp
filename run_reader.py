@@ -13,11 +13,12 @@ readers = [InfCorEx24v1a1('/mnt/HPC/processed/mr875/tasks/dsp367/corev1_0_rsEg.c
     InfImmun24v2grc38('/mnt/HPC/processed/mr875/tasks/dsp367/infimmung38_Eg.csv'),
     InfCorEx24v1_1grc38('/mnt/HPC/processed/mr875/tasks/dsp367/infincorex38_Eg.csv'),
     InfOmniExpr('/mnt/HPC/processed/mr875/tasks/dsp367/infomniexpr_Eg.csv'),
-    InfOmniExpr38('/mnt/HPC/processed/mr875/tasks/dsp367/infomniexpr38_Eg.csv')]
+    InfOmniExpr38('/mnt/HPC/processed/mr875/tasks/dsp367/infomniexpr38_Eg.csv'),
+    MSExome('/mnt/HPC/processed/mr875/tasks/dsp367/msexome_Eg.csv')]
 
 for reader in readers:
-    #if not type(reader).__name__ == "InfOmniExpr38":
-    #    continue
+#    if not type(reader).__name__ == "MSExome":
+#        continue
     print(reader.header)
     for l in reader.linebyline(3):
         line_dict = reader.proc_line(l)

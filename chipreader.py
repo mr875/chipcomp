@@ -470,3 +470,19 @@ class InfOmniExpr38(ChipReader):
         self.fill_probeseqs(line_arr,line_dict,True)
         self.fill_general(line_arr,line_dict)
         return line_dict
+
+class MSExome(InfEx24v1a2):
+    # example excerpt: /mnt/HPC/processed/mr875/tasks/dsp367/msexome_Eg.csv
+    # original file: /mnt/HPC/processed/Metadata/variant_annotation/MSExome_annotation.csv
+
+    def __init__(self,fname):
+        super().__init__(fname)
+        self.GRCh38 = None # not used 
+        self.GRCh37 = None # not used 
+        self.datasource="72"
+
+    def load_cols(self):
+        self.col_unique_id = self.colnum('SNP')
+        self.col_chr = self.colnum('Chr')
+        self.col_GRCh37_pos = self.colnum('MapInfo')
+
