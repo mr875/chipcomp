@@ -495,6 +495,7 @@ class MSExome(InfEx24v1a2):
         line_dict['snp_id'] = snp_id
         main_id = line_arr[self.col_unique_id]
         if main_id != snp_id:
-            line_dict['uid'] = main_id.replace('MS_Replication_Chip_','') # edited line from super
+            line_dict['uid'] = main_id
+            #line_dict['uid'] = main_id.replace('MS_Replication_Chip_','') # edited line from super. only use if adding file freshly
         line_dict['chr'] = line_arr[self.col_chr]
         line_dict['pos'] = int(line_arr[self.col_GRCh37_pos]) if self.col_GRCh37_pos else int(line_arr[self.col_GRCh38_pos])
