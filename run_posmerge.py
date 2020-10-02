@@ -49,7 +49,7 @@ def mergeids(chose,dups,curs,conn):
 def main():
 
     db = 'chip_comp'
-    build = '38'
+    build = '37'
     vals = (build,build)
     # for a build, find positions that have multiple entries. filter out positions used by ids that occur multiple times but with different positions. 
     qsamepos = ("select pos,chr,count(id) from positions where build = %s group by pos,chr having count(id) > 1 and pos <> 0 and pos not in "
