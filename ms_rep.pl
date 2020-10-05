@@ -1,5 +1,7 @@
 #!/usr/bin/perl
-# For MSExome long ids: perl -ne 'print if /Data too long for column \047id\047/;' log_file | perl -ne '/(skipping )(.+)(: 1406)/ && print "$2\n";'
+# perl script that creates a datasource as a subset of an original datasource by grepping lines from a file (usually a log file that contains variants that did not get added the first time)
+# mainly can be used as a template for adhoc perl scripts
+# For extracting MSExome long ids: perl -ne 'print if /Data too long for column \047id\047/;' log_file | perl -ne '/(skipping )(.+)(: 1406)/ && print "$2\n";'
 use strict;
 
 my $logfile = shift or die "Usage: $0 <log file> <source (chip) file>\n";
