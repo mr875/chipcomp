@@ -95,6 +95,7 @@ class VariantI:
                 self.add_primary(self.secondary_id,self.datasource)
         #else: secondary id already in consensus table, main_id already switched
 
+    @classmethod
     def flankmatch(self,thisflank,dbflank,probe=False):
         thisflank = thisflank.upper()
         dbflank = dbflank.upper()
