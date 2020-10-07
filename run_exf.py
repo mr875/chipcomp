@@ -11,12 +11,11 @@ def get_flank(uid,curs):
 
 def compare_dbf(nflnk,allfl):
     dbflanks = [f['flank_seq'] for f in allfl]
-    valind = None
+    valind = []
     for ind,dbfl in enumerate(dbflanks):
         match = VariantI.flankmatch(nflnk,dbfl)
         if match:
-            valind = ind
-            break
+            valind.append(ind)
     return valind
 
 def rev(seq): # repeated: should reuse already-written methods but original design does not facilitate this well enough 
@@ -27,6 +26,7 @@ def rev(seq): # repeated: should reuse already-written methods but original desi
     return revseq
     
 def main(argv):
+    longerf = open("exfl_longer.txt", "w")
     exfname = 'exflank/external_flanks.txt' # add alternative path on command line
     db = 'chip_comp'
     if argv:
@@ -38,17 +38,30 @@ def main(argv):
         raise
     conn = DBConnect(db)
     curs = conn.getCursor(dic=True)
+    count_needlonger = 0
+    count_matchfound = 0
+    count_matchnotfound = 0
     for uid,nflnk in listf.readls():
         allfl = get_flank(uid,curs)
         match = compare_dbf(nflnk,allfl)
-        if match is None:
-            revnflnk = rev(nflnk)
-            match = compare_dbf(revnflnk,allfl)
-        if match is not None:
-            print('found match:',nflnk,allfl[match]['flank_seq'])
+        revnflnk = rev(nflnk)
+        match += compare_dbf(revnflnk,allfl)
+        if match:
+            dbfl = [allfl[ind]['flank_seq'] for ind in match]
+            #print('found %s match(es): %s :::: %s' % (len(dbfl),nflnk,' AND '.join(dbfl)))
+            if len(match) > 1:
+                count_needlonger += 1
+                fvplens = [len(df.split('[')[0]) for df in dbfl]
+                print(fvplens)
+                longerf.write('%s\t%s\n' % (uid,max(fvplens)))
+            else:
+                count_matchfound += 1
         else:
-            print('no match for',nflnk)
+            count_matchnotfound += 1
+            print('no match for',uid,nflnk)
+    print('%s variants matched 1 of their flank sequences\n%s variants need longer external flanks to find a match\n%s variants do not have any db flanks matching the external flank sequence' % (count_matchfound,count_needlonger,count_matchnotfound))
     conn.close()
+    longerf.close()
 
 if __name__ == '__main__':
     main(sys.argv[1:])
