@@ -57,7 +57,7 @@ class ResolveF(ChipReader):
     def contains_alt(self,seq):
         seq = seq.upper()
         for key in self.switchextra:
-            if seq.find(key):
+            if seq.find(key) > -1: #find() returns -1 if character not found, otherwise returns index
                 return True
         return False
 
@@ -132,7 +132,9 @@ def main():
 
     db = 'chip_comp'
     q = "SELECT id,COUNT(flank_seq) FROM flank GROUP BY id HAVING COUNT(flank_seq) > %s ORDER BY COUNT(flank_seq) DESC"
+    #q = "SELECT id,chr FROM consensus where id = %s"
     vals = (1,)
+    #vals = ('rs150542670',)
     fname = 'twos.txt'
     qf = QueryFile(fname,q,vals,db)
     rc = qf.row_count
