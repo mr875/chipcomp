@@ -1,6 +1,7 @@
 from varianti import VariantI
 from connect import DBConnect
 from queryfile import NormFile
+import re
 import sys
 
 def get_flank(uid,curs):
@@ -9,6 +10,17 @@ def get_flank(uid,curs):
     allfl = curs.fetchall()
     return allfl
 
+def indel_correction(flank):
+    if "[-/" in flank: #insertions of more than 1 bp change the sequence on the right hand side of ']' so shift all but the 1st one: GCG[-/CA]CAGA becomes GCG[-/C]ACAGA. This is just for matching purposes. the edit is not maintained anywhere
+        dpart = re.findall(r"\[-/([A-Za-z]+)",flank)[0]
+        shiftpart = dpart[1:]
+        keeppart = dpart[0]
+        left = flank.split('[')[0]
+        right = flank.split(']')[1]
+        newflank = left + '[-/' + keeppart + ']' + shiftpart + right
+        flank = newflank
+    return flank
+
 def compare_dbf(nflnk,allfl):
     dbflanks = [f['flank_seq'] for f in allfl]
     valind = []
@@ -16,6 +28,10 @@ def compare_dbf(nflnk,allfl):
         match = VariantI.flankmatch(nflnk,dbfl)
         if match:
             valind.append(ind)
+        else:
+            match = VariantI.flankmatch(nflnk,indel_correction(dbfl)) # try again
+            if match:
+                valind.append(ind)
     return valind
 
 def rev(seq): # repeated: should reuse already-written methods but original design does not facilitate this well enough 
@@ -52,14 +68,14 @@ def main(argv):
             if len(match) > 1:
                 count_needlonger += 1
                 fvplens = [len(df.split('[')[0]) for df in dbfl]
-                print(fvplens)
+                #print(fvplens)
                 longerf.write('%s\t%s\n' % (uid,max(fvplens)))
             else:
                 count_matchfound += 1
         else:
             count_matchnotfound += 1
             print('no match for',uid,nflnk)
-    print('%s variants matched 1 of their flank sequences\n%s variants need longer external flanks to find a match\n%s variants do not have any db flanks matching the external flank sequence' % (count_matchfound,count_needlonger,count_matchnotfound))
+    print('%s variants matched 1 of their flank sequences\n%s variants may need longer (more than one match made) external flanks to find a match\n%s variants do not have any db flanks matching the external flank sequence' % (count_matchfound,count_needlonger,count_matchnotfound))
     conn.close()
     longerf.close()
 
