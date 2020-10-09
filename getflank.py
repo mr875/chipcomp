@@ -59,9 +59,9 @@ def getdetails(rsid):
     pos = pos.split(':')[1]
     return (chrm,pos,acc,allele,genename)
 
-def getflank(pos,acc):
+def getflank(pos,acc,lrl=50):
     pos = int(pos)
-    lrlength = 50
+    lrlength = lrl
     leftstart = pos - lrlength
     leftend = pos - 1
     rightstart = pos + 1
