@@ -36,10 +36,10 @@ class QueryFile:
             for line in f:
                 yield line
 
-    def readls(self):
+    def readls(self,dlim="\t"):
         with open(self.bfile) as f:
             for line in f:
-                line = line.rstrip().split("\t")
+                line = line.rstrip().split(dlim)
                 yield line
 
     def remove(self):
