@@ -1,0 +1,23 @@
+generate out_getnors.txt file with getnors.sql
+
+get dbSNP dump:
+copy_HG38_GRC38dbSNP_ChrposRS.loaded
+apply some filters(grep):
+"^[0-9]{1,2}:[0-9]+ rs[0-9]+$"
+3979416
+"^(X|Y).*:[0-9]+ rs[0-9]+$"
+105527
+filtered file 
+dbsnp.txt
+sort -t$' ' -u -k1,1 dbsnp.txt > sdbsnp.txt
+sdbsnp.txt
+
+sort -t$'\t' -k2,2 -u out_getnors.txt > sout_getnors.txt
+join -1 2 -2 1 sout_getnors.txt sdbsnp.txt > nors_j_dbsnp.txt
+253795 nors_j_dbsnp.txt (vs 293258 sout_getnors.txt)
+So found rsids for 86.5% of original set.
+
+what ids are left without an rs id?
+awk '{print $2}' nors_j_dbsnp.txt | sort > j_ids.txt
+awk '{print $1}' sout_getnors.txt | sort > nj_ids.txt
+comm -23 nj_ids.txt j_ids.txt > still_no_rsids_grch38.txt
