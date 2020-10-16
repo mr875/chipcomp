@@ -1,9 +1,27 @@
+from resolvef import ResolveF
 from varianti import VariantI
 from connect import DBConnect
 from queryfile import NormFile
 import re
 import sys
 
+class ResExf(ResolveF):
+
+    def __init__(self,allfl):
+        self.allfl = allfl
+        self.switchdic = {"A":"T","C":"G","G":"C","T":"A"}
+        self.switchextra = {"N":"N","R":"Y","Y":"R","S":"S","W":"W","K":"M","M":"K","B":"V","V":"B","D":"H","H":"D"}
+
+    def check_local(self,modelseq):
+        model = modelseq
+        valind = []
+        left,right = self.leftright(model)
+        for ind,fl in enumerate(self.allfl):
+            comp = fl['flank_seq'].upper()
+            if left in comp or right in comp:
+                valind.append(ind)
+        return valind
+    
 def get_flank(uid,curs):
     q = "SELECT * FROM flank WHERE id = %s"
     curs.execute(q,(uid,))
@@ -34,6 +52,9 @@ def compare_dbf(nflnk,allfl):
                 valind.append(ind)
     return valind
 
+def shift_det():
+    pass
+
 def rev(seq): # repeated: should reuse already-written methods but original design does not facilitate this well enough 
     switchdic = {"A":"T","C":"G","G":"C","T":"A","[":"]","]":"["}
     #switchextra = {"N":"N","R":"Y","Y":"R","S":"S","W":"W","K":"M","M":"K","B":"V","V":"B","D":"H","H":"D"}
@@ -58,13 +79,25 @@ def main(argv):
     count_matchfound = 0
     count_matchnotfound = 0
     for uid,nflnk in listf.readls():
-        allfl = get_flank(uid,curs)
+        try:
+            allfl = get_flank(uid,curs)
+        except:
+            print("Unexpected error:", sys.exc_info()[0])
+            break
         match = compare_dbf(nflnk,allfl)
         revnflnk = rev(nflnk)
         match += compare_dbf(revnflnk,allfl)
         if match:
             dbfl = [allfl[ind]['flank_seq'] for ind in match]
             #print('found %s match(es): %s :::: %s' % (len(dbfl),nflnk,' AND '.join(dbfl)))
+            try:
+                matchedfl =  [allfl[ind] for ind in match] # new list with matching dicts (so new indexes)
+                localmatch = ResExf(matchedfl).check_local(nflnk)
+                if len(match) != len(localmatch):
+                    print("shift detection in %s, %s" % (uid,nflnk))
+            except:
+                print("Unexpected error:", sys.exc_info()[0])
+                break
             if len(match) > 1:
                 count_needlonger += 1
                 fvplens = [len(df.split('[')[0]) for df in dbfl]
