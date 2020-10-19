@@ -75,9 +75,16 @@ def getflank(pos,acc,lrl=50):
     right = req.text.rstrip().split('\n')[1]
     return left,right 
 
-def main():
-    rsids = NormFile('exflank/rsids.txt')
-    batch = 500 # set to higher than line number of rsids.txt if you want to parse the whole file
+def main(argv):
+    fname = 'exflank/rsids.txt' 
+    if argv:
+        fname = argv[0]
+    try:
+        rsids = NormFile(fname)
+    except FileNotFoundError:
+        print("file %s does not exist. Provide a file with rs ids to look up" % (fname))
+        raise
+    batch = 17 # set to higher than line number of rsids.txt if you want to parse the whole file
     startid = ""
     max_fail = 20 # allow some failures before exiting
     rc = rsids.row_count
@@ -112,7 +119,11 @@ def main():
             logline += fvper
         try:
             chrm,pos,acc,allele,genename = getdetails(line[0])
-            left,right = getflank(pos,acc)
+            if len(line) > 1:
+                flank_length = int(line[1])
+                left,right = getflank(pos,acc,flank_length)
+            else:
+                left,right = getflank(pos,acc)
             exfl.write("%s\t%s[]%s\n" % (line[0],left,right))
         except Exception as e:
             fail_count+=1
@@ -129,4 +140,4 @@ def main():
         logging.info('reached end of file %s after %s seconds' % (rsids.bfile,now))
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:])
