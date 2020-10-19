@@ -53,7 +53,14 @@ def compare_dbf(nflnk,allfl):
     return valind
 
 def findnomatch(reducedDL,originalDL):#which elements in original dictionary list are not in the reduced dictionary list 
-    return None
+    rdprimkeys = [rd['id'] + rd['colname'] + rd['datasource'] for rd in reducedDL]
+    odprimkeys = [od['id'] + od['colname'] + od['datasource'] for od in originalDL]
+    nomatch = []
+    for ind,pk in enumerate(odprimkeys):
+        if pk not in rdprimkeys:
+            nomatch.append(ind)
+    nomatchfl = [originalDL[ind] for ind in nomatch]
+    return nomatchfl
 
 def rev(seq): # repeated: should reuse already-written methods but original design does not facilitate this well enough 
     switchdic = {"A":"T","C":"G","G":"C","T":"A","[":"]","]":"["}
@@ -88,19 +95,13 @@ def main(argv):
         revnflnk = rev(nflnk)
         match += compare_dbf(revnflnk,allfl)
         if match:
-            allfl_before = allfl
-            matchedfl =  [allfl[ind] for ind in match] # new list with matching dicts (so new indexes)
-            localmatch = ResExf(matchedfl).check_local(nflnk)
-            if len(match) != len(localmatch):
-                print("shift detection in %s, %s. %s matches before, %s matches after" % (uid,nflnk,len(match),len(localmatch)))
-                match = localmatch
-                allfl = matchedfl
-            matchfl = [allfl[ind] for ind in match]
+            matchfl =  [allfl[ind] for ind in match] # new list with matching dicts (so new indexes)
+            localmatch = ResExf(matchfl).check_local(nflnk) # additional check, potentially reducing matches
+            matchfl = [matchfl[ind] for ind in localmatch]
             nomatchfl = findnomatch(matchfl,allfl)
-            if len(match) > 1:
+            if len(localmatch) > 1:
                 count_needlonger += 1
                 fvplens = [len(df['flank_seq'].split('[')[0]) for df in matchfl]
-                #print(fvplens)
                 longerf.write('%s\t%s\n' % (uid,max(fvplens)))
             else:
                 count_matchfound += 1
