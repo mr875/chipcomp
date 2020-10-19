@@ -52,8 +52,8 @@ def compare_dbf(nflnk,allfl):
                 valind.append(ind)
     return valind
 
-def shift_det():
-    pass
+def findnomatch(reducedDL,originalDL):#which elements in original dictionary list are not in the reduced dictionary list 
+    return None
 
 def rev(seq): # repeated: should reuse already-written methods but original design does not facilitate this well enough 
     switchdic = {"A":"T","C":"G","G":"C","T":"A","[":"]","]":"["}
@@ -88,19 +88,18 @@ def main(argv):
         revnflnk = rev(nflnk)
         match += compare_dbf(revnflnk,allfl)
         if match:
-            dbfl = [allfl[ind]['flank_seq'] for ind in match]
-            #print('found %s match(es): %s :::: %s' % (len(dbfl),nflnk,' AND '.join(dbfl)))
-            try:
-                matchedfl =  [allfl[ind] for ind in match] # new list with matching dicts (so new indexes)
-                localmatch = ResExf(matchedfl).check_local(nflnk)
-                if len(match) != len(localmatch):
-                    print("shift detection in %s, %s" % (uid,nflnk))
-            except:
-                print("Unexpected error:", sys.exc_info()[0])
-                break
+            allfl_before = allfl
+            matchedfl =  [allfl[ind] for ind in match] # new list with matching dicts (so new indexes)
+            localmatch = ResExf(matchedfl).check_local(nflnk)
+            if len(match) != len(localmatch):
+                print("shift detection in %s, %s. %s matches before, %s matches after" % (uid,nflnk,len(match),len(localmatch)))
+                match = localmatch
+                allfl = matchedfl
+            matchfl = [allfl[ind] for ind in match]
+            nomatchfl = findnomatch(matchfl,allfl)
             if len(match) > 1:
                 count_needlonger += 1
-                fvplens = [len(df.split('[')[0]) for df in dbfl]
+                fvplens = [len(df['flank_seq'].split('[')[0]) for df in matchfl]
                 #print(fvplens)
                 longerf.write('%s\t%s\n' % (uid,max(fvplens)))
             else:
