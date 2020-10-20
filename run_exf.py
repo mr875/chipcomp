@@ -39,6 +39,13 @@ def indel_correction(flank):
         flank = newflank
     return flank
 
+def log_badmatch(fh,uid,nseq,flds):
+    for fld in flds:
+        ds = fld['datasource']
+        cname = fld['colname']
+        badseq = fld['flank_seq']
+        fh.write('%s\t%s\t%s\t%s\t%s\n' % (uid,ds,cname,badseq,nseq))
+
 def compare_dbf(nflnk,allfl):
     dbflanks = [f['flank_seq'] for f in allfl]
     valind = []
@@ -70,7 +77,6 @@ def rev(seq): # repeated: should reuse already-written methods but original desi
     return revseq
     
 def main(argv):
-    longerf = open("exfl_longer.txt", "w")
     exfname = 'exflank/external_flanks.txt' # add alternative path on command line
     db = 'chip_comp'
     if argv:
@@ -82,9 +88,12 @@ def main(argv):
         raise
     conn = DBConnect(db)
     curs = conn.getCursor(dic=True)
-    count_needlonger = 0
-    count_matchfound = 0
-    count_matchnotfound = 0
+    badmatchf = open("exfl_badmatch","w")
+    longerf = open("exfl_longer.txt", "w")
+    count_matchmult = 0
+    count_allmatch = 0
+    count_matchone = 0
+    count_matchzero = 0
     for uid,nflnk in listf.readls():
         try:
             allfl = get_flank(uid,curs)
@@ -100,17 +109,22 @@ def main(argv):
             matchfl = [matchfl[ind] for ind in localmatch]
             nomatchfl = findnomatch(matchfl,allfl)
             if len(localmatch) > 1:
-                count_needlonger += 1
+                count_matchmult += 1
+                if len(localmatch) == len(allfl):
+                    count_allmatch += 1
                 fvplens = [len(df['flank_seq'].split('[')[0]) for df in matchfl]
                 longerf.write('%s\t%s\n' % (uid,max(fvplens)))
             else:
-                count_matchfound += 1
+                count_matchone += 1
+            log_badmatch(badmatchf,uid,nflnk,nomatchfl)
         else:
-            count_matchnotfound += 1
-            print('no match for',uid,nflnk)
-    print('%s variants matched 1 of their flank sequences\n%s variants may need longer (more than one match made) external flanks to find a match\n%s variants do not have any db flanks matching the external flank sequence' % (count_matchfound,count_needlonger,count_matchnotfound))
+            count_matchzero += 1
+            log_badmatch(badmatchf,uid,nflnk,allfl)
+            #print('no match for',uid,nflnk)
+    print('%s variants matched 1 of their flank sequences\n%s variants matched multiple of their external flanks (%s of these match ALL of their flanks(so no mismatches at all))\n%s variants do not have any db flanks matching the external flank sequence' % (count_matchone,count_matchmult,count_allmatch,count_matchzero))
     conn.close()
     longerf.close()
+    badmatchf.close()
 
 if __name__ == '__main__':
     main(sys.argv[1:])
