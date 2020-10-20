@@ -84,9 +84,9 @@ def main(argv):
     except FileNotFoundError:
         print("file %s does not exist. Provide a file with rs ids to look up" % (fname))
         raise
-    batch = 17 # set to higher than line number of rsids.txt if you want to parse the whole file
+    batch = 5 # set to higher than line number of rsids.txt if you want to parse the whole file
     startid = ""
-    max_fail = 20 # allow some failures before exiting
+    max_fail = 130 # allow some failures before exiting
     rc = rsids.row_count
     logfile = datetime.datetime.now().strftime("gfl_%a_%d%b_%I%p.log")
     logging.basicConfig(filename=logfile, level=logging.INFO)
