@@ -4,6 +4,7 @@ from connect import DBConnect
 from queryfile import NormFile
 import re
 import sys
+import copy
 
 class ResExf(ResolveF):
 
@@ -11,6 +12,9 @@ class ResExf(ResolveF):
         self.allfl = allfl
         self.switchdic = {"A":"T","C":"G","G":"C","T":"A"}
         self.switchextra = {"N":"N","R":"Y","Y":"R","S":"S","W":"W","K":"M","M":"K","B":"V","V":"B","D":"H","H":"D"}
+        self.knownstrandflags = ["+","PLUS","TOP"]
+        self.knowncolnameflags = ["Forward_Seq","Plus_Seq","TopGenomicSeq","Plus_Seq"]
+        self.combos = self.comblist(len(self.allfl))
 
     def check_local(self,modelseq):
         model = modelseq
@@ -22,6 +26,24 @@ class ResExf(ResolveF):
                 valind.append(ind)
         return valind
     
+def multchoose(matchfl):
+    already_chosen = [fld['chosen'] for fld in matchfl]
+    if 1 in already_chosen or 2 in already_chosen:
+        print("this list of flanks already has a 'chosen' row ", matchfl)
+        return
+    remove = ResExf(matchfl).choose_flankseq()
+    if (len(remove)+1) < len(matchfl):
+        indc_fl = copy.deepcopy(matchfl)
+        for fld in indc_fl:
+            fld['flank_seq'] = indel_correction(fld['flank_seq'])
+        remove = ResExf(indc_fl).choose_flankseq()
+    if (len(remove)+1) < len(matchfl):
+        print("not found all removals, probably due to indels. Will choose the first and remove the rest ",matchfl)
+        keep = {0}
+        remove = {i for i in range(len(matchfl))[1:]}
+    keep = {i for i in range(len(matchfl))}.difference(remove)
+    return remove,keep
+
 def get_flank(uid,curs):
     q = "SELECT * FROM flank WHERE id = %s"
     curs.execute(q,(uid,))
@@ -79,17 +101,24 @@ def rev(seq): # repeated: should reuse already-written methods but original desi
 def main(argv):
     exfname = 'exflank/external_flanks.txt' # add alternative path on command line
     db = 'chip_comp'
-    if argv:
+    editdb = False
+    if len(argv) > 0:
         exfname = argv[0]
     try:
         listf = NormFile(exfname)
     except FileNotFoundError:
         print("file %s does not exist. Provide an external flank file (<id>\\t<flankseq>)" % (exfname))
         raise
+    if len(argv) > 1:
+        if argv[1] == 'True':
+            editdb = True
+    print(editdb)
     conn = DBConnect(db)
     curs = conn.getCursor(dic=True)
     badmatchf = open("exfl_badmatch","w")
     longerf = open("exfl_longer.txt", "w")
+    if editdb: 
+        longerf.write('no entries because "editdb" switch is on\n')
     count_matchmult = 0
     count_allmatch = 0
     count_matchone = 0
@@ -112,8 +141,11 @@ def main(argv):
                 count_matchmult += 1
                 if len(localmatch) == len(allfl):
                     count_allmatch += 1
-                fvplens = [len(df['flank_seq'].split('[')[0]) for df in matchfl]
-                longerf.write('%s\t%s\n' % (uid,max(fvplens)))
+                if not editdb:
+                    fvplens = [len(df['flank_seq'].split('[')[0]) for df in matchfl]
+                    longerf.write('%s\t%s\n' % (uid,max(fvplens)))
+                else:
+                    remove,keep = multchoose(matchfl)
             else:
                 count_matchone += 1
             log_badmatch(badmatchf,uid,nflnk,nomatchfl)
