@@ -26,6 +26,13 @@ class ResExf(ResolveF):
                 valind.append(ind)
         return valind
     
+    @classmethod
+    def remove_red(self,curs,fordels): 
+        q = 'DELETE FROM flank WHERE id = %s AND colname = %s AND datasource = %s' # these 3 cols = primary key
+        for fl in fordels:
+            args = (fl['id'],fl['colname'],fl['datasource'])
+            curs.execute(q,args)
+    
 def multchoose(matchfl):
     already_chosen = [fld['chosen'] for fld in matchfl]
     if 1 in already_chosen or 2 in already_chosen:
@@ -146,6 +153,11 @@ def main(argv):
                     longerf.write('%s\t%s\n' % (uid,max(fvplens)))
                 else:
                     remove,keep = multchoose(matchfl)
+                    print('remove: ',remove,'\nkeep: ',keep)
+                    fordel = [matchfl[ind] for ind in remove]
+                    forkeep = keep.pop()
+                    #ResExf.remove_red(curs,fordels)
+                    #print('to remove: ',fordel,'\nto keep',matchfl[forkeep],'\n',forkeep)
             else:
                 count_matchone += 1
             log_badmatch(badmatchf,uid,nflnk,nomatchfl)
