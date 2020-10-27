@@ -27,12 +27,19 @@ class ResExf(ResolveF):
         return valind
     
     @classmethod
-    def remove_red(self,curs,fordels): 
+    def remove_red(cls,curs,fordels): 
         q = 'DELETE FROM flank WHERE id = %s AND colname = %s AND datasource = %s' # these 3 cols = primary key
         for fl in fordels:
             args = (fl['id'],fl['colname'],fl['datasource'])
             curs.execute(q,args)
-    
+
+    @classmethod
+    def flag_chosen(cls,curs,chfls):
+        q = 'UPDATE flank SET chosen = 1 WHERE id = %s AND colname = %s AND datasource = %s'
+        for fl in chfls:
+            args = (fl['id'],fl['colname'],fl['datasource'])
+            curs.execute(q,args)
+            
 def multchoose(matchfl):
     already_chosen = [fld['chosen'] for fld in matchfl]
     if 1 in already_chosen or 2 in already_chosen:
@@ -134,7 +141,7 @@ def main(argv):
         try:
             allfl = get_flank(uid,curs)
         except:
-            print("Unexpected error:", sys.exc_info()[0])
+            print("Unexpected error:", sys.exc_info()[0],'\ninterrupted at uid ',uid)
             break
         match = compare_dbf(nflnk,allfl)
         revnflnk = rev(nflnk)
@@ -155,9 +162,17 @@ def main(argv):
                     remove,keep = multchoose(matchfl)
                     print('remove: ',remove,'\nkeep: ',keep)
                     fordel = [matchfl[ind] for ind in remove]
-                    forkeep = keep.pop()
-                    #ResExf.remove_red(curs,fordels)
-                    #print('to remove: ',fordel,'\nto keep',matchfl[forkeep],'\n',forkeep)
+                    if keep:
+                        forkeep = [matchfl[keep.pop()]] # only one entry
+                    else:
+                        forkeep = []
+                    try:
+                        ResExf.remove_red(curs,fordel)
+                        ResExf.flag_chosen(curs,forkeep)
+                        conn.commit()
+                    except:
+                        print("Unexpected error:", sys.exc_info()[0],'\ninterrupted at uid ',uid)
+                        break
             else:
                 count_matchone += 1
             log_badmatch(badmatchf,uid,nflnk,nomatchfl)
