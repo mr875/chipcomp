@@ -44,7 +44,7 @@ def multchoose(matchfl):
     already_chosen = [fld['chosen'] for fld in matchfl]
     if 1 in already_chosen or 2 in already_chosen:
         print("this list of flanks already has a 'chosen' row ", matchfl)
-        return
+        return [],[]
     remove = ResExf(matchfl).choose_flankseq()
     if (len(remove)+1) < len(matchfl):
         indc_fl = copy.deepcopy(matchfl)
@@ -56,7 +56,7 @@ def multchoose(matchfl):
         keep = {0}
         remove = {i for i in range(len(matchfl))[1:]}
     keep = {i for i in range(len(matchfl))}.difference(remove)
-    return remove,keep
+    return list(remove),list(keep)
 
 def get_flank(uid,curs):
     q = "SELECT * FROM flank WHERE id = %s"
@@ -162,14 +162,12 @@ def main(argv):
                     remove,keep = multchoose(matchfl)
                     print('remove: ',remove,'\nkeep: ',keep)
                     fordel = [matchfl[ind] for ind in remove]
-                    if keep:
-                        forkeep = [matchfl[keep.pop()]] # only one entry
-                    else:
-                        forkeep = []
+                    forkeep = [matchfl[ind] for ind in keep] # expecting 1 entry
                     try:
-                        ResExf.remove_red(curs,fordel)
-                        ResExf.flag_chosen(curs,forkeep)
-                        conn.commit()
+                        pass
+                    #    ResExf.remove_red(curs,fordel)
+                    #    ResExf.flag_chosen(curs,forkeep)
+                    #    conn.commit()
                     except:
                         print("Unexpected error:", sys.exc_info()[0],'\ninterrupted at uid ',uid)
                         break
