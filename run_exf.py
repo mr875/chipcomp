@@ -40,10 +40,16 @@ class ResExf(ResolveF):
             args = (fl['id'],fl['colname'],fl['datasource'])
             curs.execute(q,args)
             
-def multchoose(matchfl):
+def alr_chose(matchfl):
     already_chosen = [fld['chosen'] for fld in matchfl]
     if 1 in already_chosen or 2 in already_chosen:
         print("this list of flanks already has a 'chosen' row ", matchfl)
+        return True
+    return False
+
+def multchoose(matchfl):
+    already_chosen = [fld['chosen'] for fld in matchfl]
+    if alr_chose(matchfl):
         return [],[]
     remove = ResExf(matchfl).choose_flankseq()
     if (len(remove)+1) < len(matchfl):
@@ -160,7 +166,6 @@ def main(argv):
                     longerf.write('%s\t%s\n' % (uid,max(fvplens)))
                 else:
                     remove,keep = multchoose(matchfl)
-                    print('remove: ',remove,'\nkeep: ',keep)
                     fordel = [matchfl[ind] for ind in remove]
                     forkeep = [matchfl[ind] for ind in keep] # expecting 1 entry
                     try:
@@ -169,10 +174,17 @@ def main(argv):
                     #    ResExf.flag_chosen(curs,forkeep)
                     #    conn.commit()
                     except:
-                        print("Unexpected error:", sys.exc_info()[0],'\ninterrupted at uid ',uid)
+                        print("Unexpected error while editing db:", sys.exc_info()[0],'\ninterrupted at uid ',uid)
                         break
             else:
                 count_matchone += 1
+                if not alr_chose(matchfl):
+                    try:
+                        ResExf.flag_chosen(curs,matchfl)
+                        conn.commit()
+                    except:
+                        print("Unexpected error while editing db:", sys.exc_info()[0],'\ninterrupted at uid ',uid)
+                        break
             log_badmatch(badmatchf,uid,nflnk,nomatchfl)
         else:
             count_matchzero += 1
