@@ -39,6 +39,12 @@ class ResExf(ResolveF):
         for fl in chfls:
             args = (fl['id'],fl['colname'],fl['datasource'])
             curs.execute(q,args)
+
+    @classmethod
+    def add_ext(cls,curs,uid,nflank):
+        q = "INSERT IGNORE INTO flank (id,colname,datasource,flank_seq,chosen) VALUES (%s, %s, %s, %s, %s)"
+        vals = (uid,'ext','ext',nflank,1)
+        curs.execute(q,vals)
             
 def alr_chose(matchfl):
     already_chosen = [fld['chosen'] for fld in matchfl]
@@ -174,22 +180,30 @@ def main(argv):
                     #    ResExf.flag_chosen(curs,forkeep)
                     #    conn.commit()
                     except:
-                        print("Unexpected error while editing db:", sys.exc_info()[0],'\ninterrupted at uid ',uid)
+                        print("Unexpected error while editing db: removing dups and flagging chosen", sys.exc_info()[0],'\ninterrupted at uid ',uid)
                         break
             else:
                 count_matchone += 1
-                if not alr_chose(matchfl):
-                    try:
-                        ResExf.flag_chosen(curs,matchfl)
-                        conn.commit()
-                    except:
-                        print("Unexpected error while editing db:", sys.exc_info()[0],'\ninterrupted at uid ',uid)
-                        break
+                if editdb:
+                    if not alr_chose(matchfl):
+                        try:
+                            pass
+                            #ResExf.flag_chosen(curs,matchfl)
+                            #conn.commit()
+                        except:
+                            print("Unexpected error while editing db (flagging chosen flank):", sys.exc_info()[0],'\ninterrupted at uid ',uid)
+                            break
             log_badmatch(badmatchf,uid,nflnk,nomatchfl)
         else:
             count_matchzero += 1
             log_badmatch(badmatchf,uid,nflnk,allfl)
-            #print('no match for',uid,nflnk)
+            if editdb:
+                try:
+                    ResExf.add_ext(curs,uid,nflnk)
+                    conn.commit()
+                except:
+                    print("Unexpected error while editing db (adding ext flank seq):", sys.exc_info()[0],'\ninterrupted at uid ',uid)
+                    break
     print('%s variants matched 1 of their flank sequences\n%s variants matched multiple of their external flanks (%s of these match ALL of their flanks(so no mismatches at all))\n%s variants do not have any db flanks matching the external flank sequence' % (count_matchone,count_matchmult,count_allmatch,count_matchzero))
     conn.close()
     longerf.close()
