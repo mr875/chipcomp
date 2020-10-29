@@ -64,7 +64,7 @@ def multchoose(matchfl):
             fld['flank_seq'] = indel_correction(fld['flank_seq'])
         remove = ResExf(indc_fl).choose_flankseq()
     if (len(remove)+1) < len(matchfl):
-        print("not found all removals, probably due to indels. Will choose the first and remove the rest ",matchfl)
+        print("not found all removals, probably due to indels. Have you provided external flanks of the same length? Will choose the first and remove the rest (if dbedit is on)",matchfl)
         keep = {0}
         remove = {i for i in range(len(matchfl))[1:]}
     keep = {i for i in range(len(matchfl))}.difference(remove)
@@ -165,20 +165,19 @@ def main(argv):
             nomatchfl = findnomatch(matchfl,allfl)
             if len(localmatch) > 1:
                 count_matchmult += 1
+                remove,keep = multchoose(matchfl) #not used if not editdb but worth doing to catch problems
                 if len(localmatch) == len(allfl):
                     count_allmatch += 1
                 if not editdb:
                     fvplens = [len(df['flank_seq'].split('[')[0]) for df in matchfl]
                     longerf.write('%s\t%s\n' % (uid,max(fvplens)))
                 else:
-                    remove,keep = multchoose(matchfl)
                     fordel = [matchfl[ind] for ind in remove]
                     forkeep = [matchfl[ind] for ind in keep] # expecting 1 entry
                     try:
-                        pass
-                    #    ResExf.remove_red(curs,fordel)
-                    #    ResExf.flag_chosen(curs,forkeep)
-                    #    conn.commit()
+                        ResExf.remove_red(curs,fordel)
+                        ResExf.flag_chosen(curs,forkeep)
+                        conn.commit()
                     except:
                         print("Unexpected error while editing db: removing dups and flagging chosen", sys.exc_info()[0],'\ninterrupted at uid ',uid)
                         break
@@ -187,9 +186,8 @@ def main(argv):
                 if editdb:
                     if not alr_chose(matchfl):
                         try:
-                            pass
-                            #ResExf.flag_chosen(curs,matchfl)
-                            #conn.commit()
+                            ResExf.flag_chosen(curs,matchfl)
+                            conn.commit()
                         except:
                             print("Unexpected error while editing db (flagging chosen flank):", sys.exc_info()[0],'\ninterrupted at uid ',uid)
                             break
