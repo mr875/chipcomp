@@ -12,13 +12,16 @@ chip.close()
 class DBConnect:
 
     def __init__(self,db="br",usr=None,pw=None,hst="localhost"):
+        self.sock = None
         if not usr and not pw:
             self.loadConf()
         else:
             self.user=usr
             self.pw=pw
-        self.dbs = mysql.connector.connect(user=self.user, password=self.pw, host=hst, database=db)
-        #self.cursor = self.dbs.cursor()
+        if self.sock: # a different way to connect if running mysqq server locally on HPC
+           self.dbs = mysql.connector.connect(unix_socket=self.sock, database=db, user=self.user, password=self.pw) 
+        else:
+            self.dbs = mysql.connector.connect(user=self.user, password=self.pw, host=hst, database=db)
         self.cursors = []
 
     def loadConf(self):
@@ -26,6 +29,9 @@ class DBConnect:
         config.read('config.ini')
         self.user=config['user']['name']
         self.pw=config['user']['pw']
+        if 'socket' in config['user']:
+            self.sock = config['user']['socket']
+
 
     def getCursor(self,dic=False):
         if dic:
