@@ -21,3 +21,5 @@ what ids are left without an rs id?
 awk '{print $2}' nors_j_dbsnp.txt | sort > j_ids.txt
 awk '{print $1}' sout_getnors.txt | sort > nj_ids.txt
 comm -23 nj_ids.txt j_ids.txt > still_no_rsids_grch38.txt
+
+Further filtering on nors_j_dbsnp.txt to handle rs ids that occur multiple times, as well as multiple rs ids for the same coordinates is carried out. TODO: add work flow here.
