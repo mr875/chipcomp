@@ -23,7 +23,7 @@ def buildrsmerge(curs,rsid,refpos,altid):
         curs.execute(q,(altid,'37'))
         b37s = curs.fetchall() 
         if len(b37s) > 0:
-            print('rsid %s can not be merged with alt_id %s because alt_id has a build 37 position (%s) (would have been merged at earlier stage if they matched)' % (rsid,altid,len(b37s)))
+            print('NOT DONE: rsid %s can not be merged with alt_id %s because alt_id has a build 37 position (%s) (would have been merged at earlier stage if they matched)' % (rsid,altid,len(b37s)))
             return
         print("attempting merging of rsid %s on build 37 with %s on build 38" % (rsid,altid)) 
         curs.execute(q,(altid,'38'))
@@ -33,9 +33,10 @@ def buildrsmerge(curs,rsid,refpos,altid):
         curs.execute(ins,(rsid,refpos.split(':')[0],refpos.split(':')[1],'38','dbsnp'))
         VariantM(curs,rsid,refpos.split(':')[1],'38','dbsnp',refpos.split(':')[0]).snpid_swapin(altid,b38s[0][2])
     if teight > 0 and '0:0' not in dbrefpos38:
-        print("rsid %s exists in db with build 38 coords, can not merge with suggested %s" % (rsid,altid)) 
+        print("NOT DONE: rsid %s exists in db with build 38 coords, can not merge with suggested %s" % (rsid,altid)) 
     if teight > 0 and '0:0' in dbrefpos38:
-        print("rsid %s already exists under build 38 but with no coords (0:0)" % (rsid))
+        print("rsid %s already exists under build 38 but with no coords (0:0). Adding to %s as alternative id instead" % (rsid,altid))
+        VariantM(curs,None,None,None,None,None).add_altid(altid,rsid,'dbsnp')
 
 
 def xyrsmerge(curs,rsid,refpos,altid):
@@ -58,7 +59,7 @@ def main(argv):
         return
     else:
         infile = NormFile(argv[0])
-    conn = DBConnect("cc4")
+    conn = DBConnect("cc3")
     curs = conn.getCursor()
     for rsid,refpos,altid in infile.readls(dlim=" "):
         try:
