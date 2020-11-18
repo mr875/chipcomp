@@ -59,7 +59,7 @@ def getdetails(rsid):
     pos = pos.split(':')[1]
     return (chrm,pos,acc,allele,genename)
 
-def getflank(pos,acc,lrl=50):
+def getflank(pos,acc,lrl=60):
     pos = int(pos)
     lrlength = lrl
     leftstart = pos - lrlength
@@ -84,9 +84,9 @@ def main(argv):
     except FileNotFoundError:
         print("file %s does not exist. Provide a file with rs ids to look up" % (fname))
         raise
-    batch = 5 # set to higher than line number of rsids.txt if you want to parse the whole file
+    batch = 241 # set to higher than line number of rsids.txt if you want to parse the whole file
     startid = ""
-    max_fail = 130 # allow some failures before exiting
+    max_fail = 241 # allow some failures before exiting
     rc = rsids.row_count
     logfile = datetime.datetime.now().strftime("gfl_%a_%d%b_%I%p.log")
     logging.basicConfig(filename=logfile, level=logging.INFO)

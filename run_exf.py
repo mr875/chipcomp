@@ -126,7 +126,7 @@ def rev(seq): # repeated: should reuse already-written methods but original desi
     
 def main(argv):
     exfname = 'exflank/external_flanks.txt' # add alternative path on command line
-    db = 'chip_comp'
+    db = 'cc4'
     editdb = False
     if len(argv) > 0:
         exfname = argv[0]
@@ -149,7 +149,7 @@ def main(argv):
     count_allmatch = 0
     count_matchone = 0
     count_matchzero = 0
-    for uid,nflnk in listf.readls():
+    for uid,nflnk in listf.readls(" "):
         try:
             allfl = get_flank(uid,curs)
         except:
