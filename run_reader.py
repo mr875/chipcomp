@@ -1,9 +1,6 @@
 from chipreader import *
 
-#reader = InfCorEx24v1a1('/mnt/HPC/processed/mr875/tasks/dsp367/corev1_0_rsEg.csv')
-#reader = InfEx24v1a2('/mnt/HPC/processed/mr875/tasks/dsp367/InfiniumExome-24v1-0_A2_Eg.csv')
-#reader = Dil('/mnt/HPC/processed/mr875/tasks/dsp367/DIL_annotation_Eg.csv')
-#reader = InfCorEx24v1_1a1('/mnt/HPC/processed/mr875/tasks/dsp367/corev1_1_rsEg.csv')
+''' small excerpt tests
 readers = [InfCorEx24v1a1('/mnt/HPC/processed/mr875/tasks/dsp367/corev1_0_rsEg.csv'),
     InfEx24v1a2('/mnt/HPC/processed/mr875/tasks/dsp367/InfiniumExome-24v1-0_A2_Eg.csv'),
     Dil('/mnt/HPC/processed/mr875/tasks/dsp367/DIL_annotation_Eg.csv'),
@@ -15,7 +12,8 @@ readers = [InfCorEx24v1a1('/mnt/HPC/processed/mr875/tasks/dsp367/corev1_0_rsEg.c
     InfOmniExpr('/mnt/HPC/processed/mr875/tasks/dsp367/infomniexpr_Eg.csv'),
     InfOmniExpr38('/mnt/HPC/processed/mr875/tasks/dsp367/infomniexpr38_Eg.csv'),
     MSExome('/mnt/HPC/processed/mr875/tasks/dsp367/msexome_Eg.csv')]
-readers = [MSExome('ms_rep_output.txt')]
+'''
+readers = [UKBBv21_2021('ukbbv2_1_Annot_2021.csv')]
 
 for reader in readers:
 #    if not type(reader).__name__ == "MSExome":

@@ -360,7 +360,6 @@ class AxiUKBBAffy2_1(ChipReader):
     # example excerpt: /mnt/HPC/processed/mr875/tasks/dsp367/AxiUKBBAffy2_1_38_Eg.csv
     # original file: /mnt/HPC/processed/mr875/tasks/dsp367/Axiom_UKBBv2_1.na36.r1.a1.annot.csv
 
-    
     def __init__(self,fname):
         super().__init__(fname)
         self.GRCh38='38'
@@ -390,6 +389,32 @@ class AxiUKBBAffy2_1(ChipReader):
             if secdbsnp.startswith('rs'):
                 line_dict['snp_id'] = secdbsnp
         return line_dict
+
+class UKBBv21_2021(AxiUKBBAffy2_1):
+    # example excerpt: 
+    # original file: /mnt/HPC/processed/mr875/tasks/dsp367/ukbbv2_1_Annot_2021.csv
+    # added copy in root dir of code base: ukbbv2_1_Annot_2021.csv
+    def load_cols(self):
+        self.col_unique_id = self.colnum('Affy_SNP_ID')
+        self.col_dbSNP_id = self.colnum('dbSNP_rsID')
+        self.extcol_dbSNP_id = self.colnum('Extended_rsID')
+        #self.col_chr = self.colnum('Chromosome')
+        #self.col_GRCh38_pos = self.colnum('Physical Position')
+        self.col_GRCh38_pos = self.colnum('Chr:pos_start')
+
+    # overriding fill_general because this file has Chr:pos_start instead of Physical Position, Chromosome
+    def fill_general(self,line_arr,line_dict):
+        snp_id = self.getrs(line_arr[self.col_unique_id])
+        if self.col_dbSNP_id:
+            possible = line_arr[self.col_dbSNP_id]
+            if possible.startswith('rs'):
+                snp_id = possible
+        line_dict['snp_id'] = snp_id
+        main_id = line_arr[self.col_unique_id]
+        if main_id != snp_id:
+            line_dict['uid'] = main_id
+        line_dict['chr'] = line_arr[self.col_GRCh38_pos].split(':')[0]
+        line_dict['pos'] = int(line_arr[self.col_GRCh38_pos].split(':')[1])
 
 class AxiUKBB_WCSG(ChipReader):
     # example excerpt: /mnt/HPC/processed/mr875/tasks/dsp367/AxiUKBB_WCSG_Eg.csv
