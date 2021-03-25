@@ -21,7 +21,7 @@ def readin(chip,reader,offset=0):
         build = "37"
     new_ds = reader.datasource
     prev_id = "first"
-    for line in reader.linebyline():
+    for line in reader.linebyline(): 
         variant_count+=1
         if logline == variant_count:
             now = int(time.time() - start)
@@ -88,7 +88,6 @@ def readin(chip,reader,offset=0):
 # debug:
 #readers = [AxiUKBBAffy2_1('/mnt/HPC/processed/mr875/tasks/dsp367/AxiUKBBAffy2_1_38_Eg.csv')]
 
-
 #readers = [InfCorEx24v1a1('/mnt/HPC/processed/Metadata/variant_annotation/CoreExomev1.0_annotation.csv'),
 #        InfEx24v1a2('/mnt/HPC/processed/Metadata/variant_annotation_grch38/InfiniumExome-24v1-0_A2.csv'),
 #        InfCorEx24v1_1a1('/mnt/HPC/processed/Metadata/variant_annotation/CoreExomev1.1_annotation.csv'),
@@ -100,11 +99,12 @@ def readin(chip,reader,offset=0):
 #        InfOmniExpr('/mnt/HPC/processed/Metadata/variant_annotation/OmniExpress_annotation.csv'),
 #        InfOmniExpr38('/mnt/HPC/processed/Metadata/variant_annotation_grch38/InfiniumOmniExpress-24v1-2_A2.csv'),
 #        MSExome('/mnt/HPC/processed/Metadata/variant_annotation/MSExome_annotation.csv')]
-readers = [MSExome('ms_rep_output.txt')]
+
 #readers = [Dil('/mnt/HPC/processed/Metadata/variant_annotation/DIL_annotation.csv')]
 
-#ch = DBConnect("cc3")
-ch = DBConnect("chip_comp")
+readers = [UKBBv21_2021('ukbbv2_1_Annot_2021.csv')]
+
+ch = DBConnect("cc3")
 logfile = datetime.datetime.now().strftime("%a_%d%b_%I%p.log")
 logging.basicConfig(filename=logfile, level=logging.INFO)
 offsetclass = "" # "AxiUKBB_WCSG"  #pick a source class from which you don't want to parse from the beginning
