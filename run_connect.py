@@ -49,7 +49,8 @@ def readin(chip,reader,offset=0):
             else:
                 prev_id = dic['snp_id']
         try:
-            variant = VariantI(curs,dic,new_ds,build)
+            variant = VariantI(curs,dic,new_ds,build,report_mode)
+            return
             variant.log_flank()
             variant.log_probe()
             variant.log_coord()
@@ -105,6 +106,7 @@ def readin(chip,reader,offset=0):
 readers = [UKBBv21_2021('ukbbv2_1_Annot_2021.csv')]
 
 ch = DBConnect("cc3")
+report_mode = True
 logfile = datetime.datetime.now().strftime("%a_%d%b_%I%p.log")
 logging.basicConfig(filename=logfile, level=logging.INFO)
 offsetclass = "" # "AxiUKBB_WCSG"  #pick a source class from which you don't want to parse from the beginning

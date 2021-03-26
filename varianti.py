@@ -1,6 +1,6 @@
 class VariantI:
 
-    def __init__(self,curs,row_dic,ds,build):
+    def __init__(self,curs,row_dic,ds,build,report_mode = False):
         self.dic = row_dic
         self.secondary_id = None
         self.main_id = None
@@ -32,27 +32,36 @@ class VariantI:
             return None
 
     def add_primary(self,prim_id,dsource,sec=None):
-        self.curs.execute("INSERT INTO consensus (id,uid_datasource) VALUES (%s, %s)",(prim_id,dsource))
-        if sec:
-            self.curs.execute("INSERT INTO alt_ids (id, alt_id, datasource) VALUES (%s,%s,%s)",(prim_id,sec,dsource))
+        if self.report_mode:
+            logging.info('to add new main id %s into consensus, ds %s. and secondary id if present (%s) to alt ids' % (prim_id,dsource,sec))
+        else:
+            self.curs.execute("INSERT INTO consensus (id,uid_datasource) VALUES (%s, %s)",(prim_id,dsource))
+            if sec:
+                self.curs.execute("INSERT INTO alt_ids (id, alt_id, datasource) VALUES (%s,%s,%s)",(prim_id,sec,dsource))
 
     def add_altid(self,prim_id,sec_id,new_ds):
         self.curs.execute("SELECT EXISTS(SELECT * FROM alt_ids WHERE id = %s AND alt_id = %s AND datasource = %s)",(prim_id,sec_id,new_ds))
         if not self.curs.fetchone()[0]:
-            self.curs.execute("INSERT INTO alt_ids (id, alt_id, datasource) VALUES (%s, %s, %s)",(prim_id,sec_id,new_ds))
+            if self.report_mode:
+                logging.info('alternative id required. %s is alt to %s, ds %s',(sec_id,prim_id,new_ds))
+            else:
+                self.curs.execute("INSERT INTO alt_ids (id, alt_id, datasource) VALUES (%s, %s, %s)",(prim_id,sec_id,new_ds))
 
     def snpid_swapin(self,uid_to_swapout,db_snp,old_ds,new_ds,this_altid=None):
         #swap dbsnp id into consensus table, put initial id into alt_ids
-        self.curs.execute("UPDATE consensus SET id = %s, uid_datasource = %s where id = %s",(db_snp,new_ds,uid_to_swapout))
-        self.curs.execute("UPDATE alt_ids SET id = %s where id = %s",(db_snp,uid_to_swapout))
-        self.curs.execute("UPDATE flank SET id = %s where id = %s",(db_snp,uid_to_swapout))
-        self.curs.execute("UPDATE positions SET id = %s where id = %s",(db_snp,uid_to_swapout))
-        self.curs.execute("UPDATE probes SET id = %s where id = %s",(db_snp,uid_to_swapout))
-        self.curs.execute("UPDATE snp_present SET id = %s where id = %s",(db_snp,uid_to_swapout))
-        self.curs.execute("UPDATE match_count SET id = %s where id = %s",(db_snp,uid_to_swapout))
-        self.curs.execute("INSERT INTO alt_ids (id, alt_id, datasource) VALUES (%s, %s, %s)",(db_snp,uid_to_swapout,old_ds))
-        if this_altid:
-            self.curs.execute("INSERT INTO alt_ids (id, alt_id, datasource) VALUES (%s, %s, %s)",(db_snp,this_altid,new_ds))
+        if self.report_mode:
+            logging.info('dbsnp id %s to be swapped in, ds %s and old main id %s to go as alt id, ds %s' % (db_snp,new_ds,uid_to_swap_out,old_ds))
+        else:
+            self.curs.execute("UPDATE consensus SET id = %s, uid_datasource = %s where id = %s",(db_snp,new_ds,uid_to_swapout))
+            self.curs.execute("UPDATE alt_ids SET id = %s where id = %s",(db_snp,uid_to_swapout))
+            self.curs.execute("UPDATE flank SET id = %s where id = %s",(db_snp,uid_to_swapout))
+            self.curs.execute("UPDATE positions SET id = %s where id = %s",(db_snp,uid_to_swapout))
+            self.curs.execute("UPDATE probes SET id = %s where id = %s",(db_snp,uid_to_swapout))
+            self.curs.execute("UPDATE snp_present SET id = %s where id = %s",(db_snp,uid_to_swapout))
+            self.curs.execute("UPDATE match_count SET id = %s where id = %s",(db_snp,uid_to_swapout))
+            self.curs.execute("INSERT INTO alt_ids (id, alt_id, datasource) VALUES (%s, %s, %s)",(db_snp,uid_to_swapout,old_ds))
+            if this_altid:
+                self.curs.execute("INSERT INTO alt_ids (id, alt_id, datasource) VALUES (%s, %s, %s)",(db_snp,this_altid,new_ds))
 
     def snp_present(self,uid,datasource):
         self.curs.execute("INSERT IGNORE INTO snp_present (id,datasource) VALUES (%s,%s)",(uid,datasource))
