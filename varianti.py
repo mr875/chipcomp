@@ -1,3 +1,5 @@
+import logging
+
 class VariantI:
 
     def __init__(self,curs,row_dic,ds,build,report_mode = False):
@@ -6,6 +8,7 @@ class VariantI:
         self.main_id = None
         self.datasource = ds
         self.build = build
+        self.report_mode = report_mode
         if 'uid' in self.dic:
             self.secondary_id = self.dic['uid']
         self.dbsnpid = self.dic['snp_id']
@@ -64,7 +67,10 @@ class VariantI:
                 self.curs.execute("INSERT INTO alt_ids (id, alt_id, datasource) VALUES (%s, %s, %s)",(db_snp,this_altid,new_ds))
 
     def snp_present(self,uid,datasource):
-        self.curs.execute("INSERT IGNORE INTO snp_present (id,datasource) VALUES (%s,%s)",(uid,datasource))
+        if self.report_mode:
+            logging.info('to register (or ignore) uid %s as being present in ds %s' % (uid,datasource))
+        else:
+            self.curs.execute("INSERT IGNORE INTO snp_present (id,datasource) VALUES (%s,%s)",(uid,datasource))
 
     def log_dbsnpid(self):
         self.main_id = self.dbsnpid
