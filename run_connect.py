@@ -50,7 +50,6 @@ def readin(chip,reader,offset=0):
                 prev_id = dic['snp_id']
         try:
             variant = VariantI(curs,dic,new_ds,build,report_mode)
-            return
             variant.log_flank()
             variant.log_probe()
             variant.log_coord()

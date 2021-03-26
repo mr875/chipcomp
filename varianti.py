@@ -148,15 +148,21 @@ class VariantI:
         if not rowlist:
             return  #db entry already deleted
         oldds = rowlist[0][0]
-        self.addmatch(dbflank,table,oldds)
-        self.curs.execute(delete+row,where)
+        #self.addmatch(dbflank,table,oldds)
+        if self.report_mode:
+            logging.info('to remove flank (or probe) seq %s from id %s most likely because it will be replaced with a longer version' % (dbflank,self.main_id))
+        else:
+            self.curs.execute(delete+row,where)
 
     def insertflank(self,thisflank,colname,fstrand,multiple,probe=False):
         q = "INSERT INTO flank (id,colname,datasource,flank_seq,flank_strand,multiple) VALUES (%s, %s, %s, %s, %s, %s)"
         if probe:
             q = "INSERT INTO probes (id,colname,datasource,probe_seq,probe_strand,multiple) VALUES (%s, %s, %s, %s, %s, %s)"
         vals = (self.main_id, colname, self.datasource,thisflank,fstrand,multiple)
-        self.curs.execute(q,vals)
+        if self.report_mode:
+            logging.info('flank (or probe) sequence to be inserted: %s for id %s, ds %s' % (thisflank,self.main_id,self.datasource))
+        else:
+            self.curs.execute(q,vals)
 
     def log_flank(self):
         self.curs.execute("SELECT flank_seq,datasource FROM flank WHERE id = %s",(self.main_id,))    
@@ -186,8 +192,8 @@ class VariantI:
                 matchtype = self.flankmatch(thisflank,dbflank)
                 if matchtype == 1: # match found, needs to be distinct ds to be added to match_count table
                     #self.countplus(dbflank,"flank","flank_seq")
-                    if self.datasource != dbflankds:
-                        self.addmatch(dbflank,"flank")
+                    #if self.datasource != dbflankds:
+                    #    self.addmatch(dbflank,"flank")
                     toadd = False
                     break
                 if matchtype == 2: # swap in thisflank
@@ -223,8 +229,8 @@ class VariantI:
             for dbprobe,dbprobeds in indb:
                 matchtype = self.flankmatch(thisprobe,dbprobe,probe=True)
                 if matchtype == 1:
-                    if self.datasource != dbprobeds:
-                        self.addmatch(dbprobe,"probes")
+                    #if self.datasource != dbprobeds:
+                    #    self.addmatch(dbprobe,"probes")
                     toadd = False
                     break
                 if matchtype == 2:
@@ -246,8 +252,11 @@ class VariantI:
             if dbpos == pos:
                 posadd = False
         if posadd:
-            vals = (self.main_id,chrm,pos,self.build,self.datasource)
-            self.curs.execute("INSERT INTO positions (id,chr,pos,build,datasource) VALUES (%s,%s,%s,%s,%s)",vals)
+            if self.report_mode:
+                logging.info('will add (new) position %s:%s to build %s for id %s ds %s' % (chrm,pos,self.build,self.main_id,self.datasource))
+            else:
+                vals = (self.main_id,chrm,pos,self.build,self.datasource)
+                self.curs.execute("INSERT INTO positions (id,chr,pos,build,datasource) VALUES (%s,%s,%s,%s,%s)",vals)
 
 class NotMerged(Exception):
     pass
