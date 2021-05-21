@@ -76,7 +76,7 @@ def get_flank(uid,curs):
     allfl = curs.fetchall()
     return allfl
 
-def indel_correction(flank):
+def indel_correction(flank): # try VariantI.indel_correction() because I have added it there now
     if "[-/" in flank: #insertions of more than 1 bp change the sequence on the right hand side of ']' so shift all but the 1st one: GCG[-/CA]CAGA becomes GCG[-/C]ACAGA. This is just for matching purposes. the edit is not maintained anywhere
         dpart = re.findall(r"\[-/([A-Za-z]+)",flank)[0]
         shiftpart = dpart[1:]
@@ -101,7 +101,7 @@ def compare_dbf(nflnk,allfl):
         match = VariantI.flankmatch(nflnk,dbfl)
         if match:
             valind.append(ind)
-        else:
+        else: # try VariantI.indel_correction() because I have added it there now
             match = VariantI.flankmatch(nflnk,indel_correction(dbfl)) # try again
             if match:
                 valind.append(ind)
@@ -119,8 +119,6 @@ def findnomatch(reducedDL,originalDL):#which elements in original dictionary lis
 
 def rev(seq): # repeated: should reuse already-written methods but original design does not facilitate this well enough 
     switchdic = {"A":"T","C":"G","G":"C","T":"A","[":"]","]":"["}
-    #switchextra = {"N":"N","R":"Y","Y":"R","S":"S","W":"W","K":"M","M":"K","B":"V","V":"B","D":"H","H":"D"}
-    #switchdic = {**self.switchdic,**self.switchextra}
     revseq = ''.join(switchdic[n] for n in seq[::-1])
     return revseq
     
@@ -156,7 +154,7 @@ def main(argv):
             print("Unexpected error:", sys.exc_info()[0],'\ninterrupted at uid ',uid)
             break
         match = compare_dbf(nflnk,allfl)
-        revnflnk = rev(nflnk)
+        revnflnk = rev(nflnk) # try Varianti.rev(nflnk) since I have now added the method there
         match += compare_dbf(revnflnk,allfl)
         if match:
             matchfl =  [allfl[ind] for ind in match] # new list with matching dicts (so new indexes)

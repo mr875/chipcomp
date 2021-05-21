@@ -1,4 +1,5 @@
 import logging
+import resolvef
 
 class VariantI:
 
@@ -123,6 +124,24 @@ class VariantI:
             return 2 # new flank is longer, swap in
         return 0  # new flank is different
 
+    @classmethod
+    def rev(self,seq): # repeated: should reuse already-written methods but original design does not facilitate this well enough 
+        switchdic = {"A":"T","C":"G","G":"C","T":"A","[":"]","]":"[","/":"/","-":"-"}
+        revseq = ''.join(switchdic[n] for n in seq[::-1])
+        return revseq
+
+    @classmethod
+    def indel_correction(self,flank):
+        if "[-/" in flank: #insertions of more than 1 bp change the sequence on the right hand side of ']' so shift all but the 1st one: GCG[-/CA]CAGA becomes GCG[-/C]ACAGA. This is just for matching purposes. the edit is not maintained anywhere
+            dpart = re.findall(r"\[-/([A-Za-z]+)",flank)[0]
+            shiftpart = dpart[1:]
+            keeppart = dpart[0]
+            left = flank.split('[')[0]
+            right = flank.split(']')[1]
+            newflank = left + '[-/' + keeppart + ']' + shiftpart + right
+            flank = newflank
+        return flank
+
     def countplus(self,searchby,table,column): #lighter version of addmatch(), will do false counts if run on the same datasource more than once
         q = "UPDATE "+table+" SET match_count=match_count+1 WHERE id = %s AND "+column+" = %s AND datasource <> %s"
         self.curs.execute(q,(self.main_id,searchby,self.datasource))
@@ -190,10 +209,14 @@ class VariantI:
             toadd = True
             for dbflank,dbflankds in indb:
                 matchtype = self.flankmatch(thisflank,dbflank)
+                if not matchtype:
+                    matchtype = self.flankmatch(self.rev(thisflank),dbflank)
+                if not matchtype:
+                    indcor_thisflank = self.indel_correction(thisflank)
+                    matchtype = self.flankmatch(indcor_thisflank,dbflank)
+                    if not matchtype:
+                        matchtype = self.flankmatch(self.rev(indcor_thisflank),dbflank)
                 if matchtype == 1: # match found, needs to be distinct ds to be added to match_count table
-                    #self.countplus(dbflank,"flank","flank_seq")
-                    #if self.datasource != dbflankds:
-                    #    self.addmatch(dbflank,"flank")
                     toadd = False
                     break
                 if matchtype == 2: # swap in thisflank

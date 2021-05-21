@@ -7,7 +7,7 @@ from varianti import VariantI
 from chipreader import *
 from connect import DBConnect
 
-def readin(chip,reader,offset=0):
+def readin(chip,reader,report_mode,offset=0):
     orig_file = reader.fname
     line_count = int(check_output(["wc", "-l", orig_file]).split()[0])
     variant_count = 0
@@ -21,7 +21,7 @@ def readin(chip,reader,offset=0):
         build = "37"
     new_ds = reader.datasource
     prev_id = "first"
-    for line in reader.linebyline(2): # remove int when testing done
+    for line in reader.linebyline(100): # remove int when testing done
         variant_count+=1
         if logline == variant_count:
             now = int(time.time() - start)
@@ -104,7 +104,7 @@ def readin(chip,reader,offset=0):
 
 readers = [UKBBv21_2021('ukbbv2_1_Annot_2021.csv')]
 
-ch = DBConnect("cc3")
+ch = DBConnect("cc2")
 report_mode = True
 logfile = datetime.datetime.now().strftime("%a_%d%b_%I%p.log")
 logging.basicConfig(filename=logfile, level=logging.INFO)
@@ -112,9 +112,9 @@ offsetclass = "" # "AxiUKBB_WCSG"  #pick a source class from which you don't wan
 offsetvariant = 249200 # variant 1 = the first line under the header. so if offsetvariant = 3 then the 3rd variant will be parsed
 for source in readers:
     if type(source).__name__ == offsetclass:
-        readin(ch,source,offsetvariant)
+        readin(ch,source,report_mode,offsetvariant)
     else:
-        readin(ch,source)
+        readin(ch,source,report_mode)
 ch.close()
 
 
