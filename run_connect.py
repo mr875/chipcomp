@@ -21,7 +21,7 @@ def readin(chip,reader,report_mode,offset=0):
         build = "37"
     new_ds = reader.datasource
     prev_id = "first"
-    for line in reader.linebyline(100): # remove int when testing done
+    for line in reader.linebyline(): # remove int when testing done
         variant_count+=1
         if logline == variant_count:
             now = int(time.time() - start)

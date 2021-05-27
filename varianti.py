@@ -1,5 +1,6 @@
 import logging
 import resolvef
+import re
 
 class VariantI:
 
@@ -47,14 +48,14 @@ class VariantI:
         self.curs.execute("SELECT EXISTS(SELECT * FROM alt_ids WHERE id = %s AND alt_id = %s AND datasource = %s)",(prim_id,sec_id,new_ds))
         if not self.curs.fetchone()[0]:
             if self.report_mode:
-                logging.info('alternative id required. %s is alt to %s, ds %s',(sec_id,prim_id,new_ds))
+                logging.info('alternative id required. %s is alt to %s, ds %s' % (sec_id,prim_id,new_ds))
             else:
                 self.curs.execute("INSERT INTO alt_ids (id, alt_id, datasource) VALUES (%s, %s, %s)",(prim_id,sec_id,new_ds))
 
     def snpid_swapin(self,uid_to_swapout,db_snp,old_ds,new_ds,this_altid=None):
         #swap dbsnp id into consensus table, put initial id into alt_ids
         if self.report_mode:
-            logging.info('dbsnp id %s to be swapped in, ds %s and old main id %s to go as alt id, ds %s' % (db_snp,new_ds,uid_to_swap_out,old_ds))
+            logging.info('dbsnp id %s to be swapped in, ds %s and old main id %s to go as alt id, ds %s' % (db_snp,new_ds,uid_to_swapout,old_ds))
         else:
             self.curs.execute("UPDATE consensus SET id = %s, uid_datasource = %s where id = %s",(db_snp,new_ds,uid_to_swapout))
             self.curs.execute("UPDATE alt_ids SET id = %s where id = %s",(db_snp,uid_to_swapout))
@@ -155,7 +156,7 @@ class VariantI:
 
     def squeezeflank(self,dbflank,probe=False):
         where = (self.main_id,dbflank)
-        select = "SELECT datasource "
+        select = "SELECT datasource,chosen "
         delete = "DELETE "
         table = "flank"
         row = "FROM flank WHERE id = %s AND flank_seq = %s"
@@ -167,12 +168,17 @@ class VariantI:
         if not rowlist:
             return  #db entry already deleted
         oldds = rowlist[0][0]
-        #self.addmatch(dbflank,table,oldds)
-        if self.report_mode:
-            logging.info('to remove flank (or probe) seq %s from id %s most likely because it will be replaced with a longer version' % (dbflank,self.main_id))
+        oldchos = rowlist[0][1]
+        if not oldchos:
+            if self.report_mode:
+                logging.info('to remove flank (or probe) seq %s from id %s most likely because it will be replaced with a longer version' % (dbflank,self.main_id))
+            else:
+                self.curs.execute(delete+row,where)
+            return 1
         else:
-            self.curs.execute(delete+row,where)
-
+            logging.info('prevented from removing flank (or probe) seq %s from id %s (it was to be replaced with a longer version) because this sequence has been validated/chosen at a previous step' % (dbflank,self.main_id))
+            return 0
+    
     def insertflank(self,thisflank,colname,fstrand,multiple,probe=False):
         q = "INSERT INTO flank (id,colname,datasource,flank_seq,flank_strand,multiple) VALUES (%s, %s, %s, %s, %s, %s)"
         if probe:
@@ -220,7 +226,9 @@ class VariantI:
                     toadd = False
                     break
                 if matchtype == 2: # swap in thisflank
-                    self.squeezeflank(dbflank) # precedes insertflank to delete from flank table and add to match_count table
+                    success = self.squeezeflank(dbflank) # precedes insertflank to delete from flank table and add to match_count table
+                    if not success:
+                        toadd = False
                     break
             if toadd:
                 self.insertflank(thisflank,thesecolnames[ind],thesefstrand[ind],multiple) 
