@@ -75,6 +75,12 @@ class VariantI:
             self.curs.execute("INSERT IGNORE INTO snp_present (id,datasource) VALUES (%s,%s)",(uid,datasource))
 
     def log_dbsnpid(self):
+        snp_alt = self.altid_exists(self.dbsnpid)
+        if snp_alt: # already logged
+            self.main_id = snp_alt[0]
+            if self.secondary_id: #snpid found but if sec id is new, add to alt_ids
+                self.add_altid(self.main_id,self.secondary_id,new_ds=self.datasource)
+            return
         self.main_id = self.dbsnpid
         snp_exist = self.id_exists(self.dbsnpid)
         if snp_exist:
