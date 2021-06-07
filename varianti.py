@@ -75,18 +75,18 @@ class VariantI:
             self.curs.execute("INSERT IGNORE INTO snp_present (id,datasource) VALUES (%s,%s)",(uid,datasource))
 
     def log_dbsnpid(self):
-        snp_alt = self.altid_exists(self.dbsnpid)
-        if snp_alt: # already logged
-            self.main_id = snp_alt[0]
+        self.main_id = self.dbsnpid
+        snp_exist = self.id_exists(self.dbsnpid)
+        snp_alt = None
+        if not snp_exist:
+            snp_alt = self.altid_exists(self.dbsnpid)
+            if snp_alt: # already logged
+                self.main_id = snp_alt[0]
+        if snp_exist or snp_alt: 
             if self.secondary_id: #snpid found but if sec id is new, add to alt_ids
                 self.add_altid(self.main_id,self.secondary_id,new_ds=self.datasource)
             return
-        self.main_id = self.dbsnpid
-        snp_exist = self.id_exists(self.dbsnpid)
-        if snp_exist:
-            if self.secondary_id: #snpid found but if sec id is new, add to alt_ids
-                self.add_altid(self.dbsnpid,self.secondary_id,new_ds=self.datasource)
-        elif self.secondary_id: #snpid not in consensus but if the uid contains a non dbsnp id
+        if self.secondary_id: #snpid not in consensus but if the uid contains a non dbsnp id
             uid_to_swapout = self.secondary_id # and it is in consensus table, it needs swapping
             uid_exist = self.id_exists(uid=uid_to_swapout)
             if uid_exist:
