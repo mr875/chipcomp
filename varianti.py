@@ -223,11 +223,15 @@ class VariantI:
                 matchtype = self.flankmatch(thisflank,dbflank)
                 if not matchtype:
                     matchtype = self.flankmatch(self.rev(thisflank),dbflank)
+                indcor_required = False
                 if not matchtype:
                     indcor_thisflank = self.indel_correction(thisflank)
                     matchtype = self.flankmatch(indcor_thisflank,dbflank)
                     if not matchtype:
                         matchtype = self.flankmatch(self.rev(indcor_thisflank),dbflank)
+                    if matchtype == 2:
+                        logging.info('flank matched after indel correction, causing flank to be longer than archived version. Normally longer versions get swapped in but not in case of indel correction. %s: %s\t->|-\t%s' % (self.main_id,thisflank,dbflank))
+                        matchtype = 1
                 if matchtype == 1: # match found, needs to be distinct ds to be added to match_count table
                     toadd = False
                     break
