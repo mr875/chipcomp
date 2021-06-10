@@ -44,14 +44,26 @@ class VariantI:
             if sec:
                 self.curs.execute("INSERT INTO alt_ids (id, alt_id, datasource) VALUES (%s,%s,%s)",(prim_id,sec,dsource))
 
-    def add_altid(self,prim_id,sec_id,new_ds):
+    def add_altid_old(self,prim_id,sec_id,new_ds): # deprecated
         self.curs.execute("SELECT EXISTS(SELECT * FROM alt_ids WHERE id = %s AND alt_id = %s AND datasource = %s)",(prim_id,sec_id,new_ds))
         if not self.curs.fetchone()[0]:
             if self.report_mode:
                 logging.info('alternative id required. %s is alt to %s, ds %s' % (sec_id,prim_id,new_ds))
             else:
                 self.curs.execute("INSERT INTO alt_ids (id, alt_id, datasource) VALUES (%s, %s, %s)",(prim_id,sec_id,new_ds))
-
+    
+    def add_altid(self,prim_id,sec_id,new_ds): # SELECT EXISTS appears to be faster than pulling out values
+        self.curs.execute("SELECT EXISTS(SELECT 1 FROM alt_ids WHERE id = %s AND alt_id = %s AND datasource = %s)",(prim_id,sec_id,new_ds))
+        if not self.curs.fetchone()[0]:
+            self.curs.execute("SELECT EXISTS(SELECT 1 from alt_ids WHERE alt_id = %s)",(sec_id,))
+            if self.curs.fetchone()[0]:
+                logging.info('alternative id %s for %s to be added but it is already an alternative to a different main id. Not adding. Can possibly be resolved by merging the main ids' % (sec_id,prim_id))
+            else:
+                if self.report_mode:
+                    logging.info('alternative id required. %s is alt to %s, ds %s' % (sec_id,prim_id,new_ds))
+                else:
+                    self.curs.execute("INSERT INTO alt_ids (id, alt_id, datasource) VALUES (%s, %s, %s)",(prim_id,sec_id,new_ds))
+    
     def snpid_swapin(self,uid_to_swapout,db_snp,old_ds,new_ds,this_altid=None):
         #swap dbsnp id into consensus table, put initial id into alt_ids
         if self.report_mode:
