@@ -150,6 +150,50 @@ class VariantI:
         return revseq
 
     @classmethod
+    def flankmatch_allow_indel(self,f1,f2,trim=1): # mentions indel but this is really about comparing left and right separately to make it eaiser to get a match, if necessary by trimming one of the sides.
+        left_fit = False
+        right_fit = False
+        f1_nofit = ''
+        f2_nofit = ''
+        f1_left = f1.split('[')[0]
+        f1_right = f1.split(']')[1]
+        f2_left = f2.split('[')[0]
+        f2_right = f2.split(']')[1]
+        if f1_left in f2_left or f2_left in f1_left:
+            left_fit = True
+        else:
+            f1_nofit = f1_left
+            f2_nofit = f2_left
+        if f1_right in f2_right or f2_right in f2_right:
+            right_fit = True
+            if left_fit:
+                return 1
+        else:
+            f1_nofit = f1_right
+            f2_nofit = f2_right
+            if not left_fit:
+                return 0 # neither left or right sides fit each other. trimming is only attempted on non matching side but at least 1 side should match without trimming
+        f1inf2 = self.trim_and_match(f1_nofit,f2_nofit,trim)
+        f2inf1 = self.trim_and_match(f2_nofit,f1_nofit,trim)
+        if f1inf2 or f2inf1:
+            return 1
+        else:
+            return 0
+
+    @classmethod
+    def trim_and_match(self,seq1,seq2,trim):
+        fits = False
+        for i in range(trim):
+            t = i + 1
+            if seq1[t:] in seq2:
+                fits = True
+                break
+            if seq1[:-t] in seq2:
+                fits = True
+                break
+        return fits
+
+    @classmethod
     def indel_correction(self,flank):
         if "[-/" in flank: #insertions of more than 1 bp change the sequence on the right hand side of ']' so shift all but the 1st one: GCG[-/CA]CAGA becomes GCG[-/C]ACAGA. This is just for matching purposes. the edit is not maintained anywhere
             dpart = re.findall(r"\[-/([A-Za-z]+)",flank)[0]
@@ -231,20 +275,20 @@ class VariantI:
                 thesefstrand.append(self.dic['flankstrand_val'])
         for ind,thisflank in enumerate(theseflanks):
             toadd = True
+            xhelp = False
             for dbflank,dbflankds in indb:
                 matchtype = self.flankmatch(thisflank,dbflank)
                 if not matchtype:
                     matchtype = self.flankmatch(self.rev(thisflank),dbflank)
-                indcor_required = False
                 if not matchtype:
-                    indcor_thisflank = self.indel_correction(thisflank)
-                    matchtype = self.flankmatch(indcor_thisflank,dbflank)
+                    xhelp = True
+                    trim = 1 # how much to try trimming off one side to help match (may help with some indels)
+                    matchtype = self.flankmatch_allow_indel(thisflank,dbflank,trim)
                     if not matchtype:
-                        matchtype = self.flankmatch(self.rev(indcor_thisflank),dbflank)
-                    if matchtype == 2:
-                        logging.info('flank matched after indel correction, causing flank to be longer than archived version. Normally longer versions get swapped in but not in case of indel correction. %s: %s\t->|-\t%s' % (self.main_id,thisflank,dbflank))
-                        matchtype = 1
+                        matchtype = self.flankmatch_allow_indel(self.rev(thisflank),dbflank,trim)
                 if matchtype == 1: # match found, needs to be distinct ds to be added to match_count table
+                    if xhelp:
+                        logging.info('less stringent matching of file flank %s with db flank %s used for %s' % (thisflank,dbflank,self.main_id))
                     toadd = False
                     break
                 if matchtype == 2: # swap in thisflank
