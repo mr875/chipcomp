@@ -102,7 +102,8 @@ def readin(chip,reader,report_mode,offset=0):
 
 #readers = [Dil('/mnt/HPC/processed/Metadata/variant_annotation/DIL_annotation.csv')]
 
-readers = [UKBBv21_2021('ukbbv2_1_Annot_2021.csv')]
+#readers = [AxiUKBBAffy2_1('Axiom_UKBBv2_1.na36.r3.a3.annot.csv')]
+readers = [AxiUKBBAffy2_1('newflank_orig_lines_valchr.txt')]
 
 ch = DBConnect("cc2")
 report_mode = True

@@ -13,13 +13,14 @@ readers = [InfCorEx24v1a1('/mnt/HPC/processed/mr875/tasks/dsp367/corev1_0_rsEg.c
     InfOmniExpr38('/mnt/HPC/processed/mr875/tasks/dsp367/infomniexpr38_Eg.csv'),
     MSExome('/mnt/HPC/processed/mr875/tasks/dsp367/msexome_Eg.csv')]
 '''
-readers = [UKBBv21_2021('ukbbv2_1_Annot_2021.csv')]
+#readers = [UKBBv21_2021('ukbbv2_1_Annot_2021.csv')]
+readers = [AxiUKBBAffy2_1('Axiom_UKBBv2_1.na36.r3.a3.annot.csv')]
 
 for reader in readers:
 #    if not type(reader).__name__ == "MSExome":
 #        continue
     print(reader.header)
-    for l in reader.linebyline(3):
+    for l in reader.linebyline(10):
         line_dict = reader.proc_line(l)
         print(line_dict)
     print()
